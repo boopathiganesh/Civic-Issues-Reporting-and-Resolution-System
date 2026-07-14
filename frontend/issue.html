@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Issues Reporting and Resolution System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .hidden-view {
+            display: none !important;
+        }
+
+        body {
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+
+<body class="font-sans text-gray-800">
+
+    <!-- Role Selection (Login Simulation) -->
+    <div id="role-selection" class="min-h-screen flex flex-col items-center justify-center p-4">
+        <h1 class="text-4xl font-bold text-blue-900 mb-2" id="main-title">Civic Issues Reporting and Resolution System
+        </h1>
+        <p class="text-gray-600 mb-10 text-center max-w-lg" id="main-subtitle">Advanced Reporting & Resolution Platform
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+            <!-- Citizen -->
+            <div class="bg-white p-6 rounded-xl shadow-md cursor-pointer role-card transition duration-300"
+                onclick="showCitizenLogin()">
+                <div class="text-center">
+                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2" id="role-citizen-title">Citizen</h3>
+                    <p class="text-sm text-gray-500" id="role-citizen-desc">Report issues & track progress</p>
+                </div>
+            </div>
+
+            <!-- Municipal Officer -->
+            <div class="bg-white p-6 rounded-xl shadow-md cursor-pointer role-card transition duration-300"
+                onclick="showOfficialLogin('municipal')">
+                <div class="text-center">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-building text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2" id="role-municipal-title">Municipal Officer</h3>
+                    <p class="text-sm text-gray-500" id="role-municipal-desc">Verify & Forward complaints</p>
+                </div>
+            </div>
+
+            <!-- Dept Official -->
+            <div class="bg-white p-6 rounded-xl shadow-md cursor-pointer role-card transition duration-300"
+                onclick="showOfficialLogin('dept')">
+                <div class="text-center">
+                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-hard-hat text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2" id="role-dept-title">Dept. Official</h3>
+                    <p class="text-sm text-gray-500" id="role-dept-desc">Resolve issues & Upload Proof</p>
+                </div>
+            </div>
+            <!-- Police Officer -->
+            <div class="bg-white p-6 rounded-xl shadow-md cursor-pointer role-card transition duration-300"
+                onclick="showOfficialLogin('police')">
+                <div class="text-center">
+                    <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2" id="role-police-title">Police Officer</h3>
+                    <p class="text-sm text-gray-500" id="role-police-desc">Handle fake-report investigations</p>
+                </div>
+            </div>
+        </div>
+        <p class="mt-8 text-xs text-gray-400">Prototype Demo</p>
+    </div>
+
+    <!-- Citizen Login Modal -->
+    <div id="citizen-login-modal"
+        class="hidden-view min-h-screen flex flex-col items-center justify-center p-4 bg-white">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border">
+            <h2 class="text-2xl font-bold text-center text-blue-900 mb-6" id="login-title">Citizen Login</h2>
+
+            <!-- Step 1: Phone -->
+            <div id="login-step-1">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" id="label-login-phone">Phone
+                        Number</label>
+                    <input type="tel" id="login-phone"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter 10-digit number" inputmode="numeric" pattern="\d{10}">
+                </div>
+                <button onclick="getOtp()" id="btn-get-otp"
+                    class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition mb-4">Get
+                    OTP</button>
+            </div>
+
+            <!-- Step 2: OTP -->
+            <div id="login-step-2" class="hidden">
+                <div id="otp-section" class="hidden">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" id="label-enter-otp">Enter OTP</label>
+                        <input type="text" id="login-otp"
+                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                            placeholder="Enter OTP sent to phone" inputmode="numeric" pattern="\d{6}" maxlength="6">
+                        <p class="text-xs text-green-600 mt-1" id="otp-sent-msg"></p>
+                    </div>
+                    <button onclick="verifyOtp()" id="btn-verify-login"
+                        class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition mb-4">Verify
+                        &
+                        Login</button>
+                </div>
+                <button onclick="cancelLogin()" id="btn-login-cancel"
+                    class="w-full text-gray-500 text-sm hover:text-gray-700">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Official Login Modal -->
+    <div id="official-login-modal"
+        class="hidden-view min-h-screen flex flex-col items-center justify-center p-4 bg-white">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6" id="official-login-title">Official Login</h2>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" id="label-official-id">User ID</label>
+                <input type="text" id="official-id"
+                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Enter ID">
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" id="label-official-pass">Password</label>
+                <input type="password" id="official-pass"
+                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Enter Password">
+            </div>
+            <div id="official-pincode-field" class="mb-4 hidden">
+                <label class="block text-gray-700 text-sm font-bold mb-2" id="label-official-pincode">Pincode</label>
+                <input type="text" id="official-pincode"
+                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Enter 6-digit Pincode" inputmode="numeric" pattern="\d{6}" maxlength="6"
+                    aria-label="Pincode">
+            </div>
+            <div id="official-dept-field" class="mb-4 hidden">
+                <label class="block text-gray-700 text-sm font-bold mb-2" id="label-official-dept">Department</label>
+                <select id="official-dept"
+                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    aria-label="Department">
+                    <option value="">Select Department...</option>
+                    <option value="Municipal Corporation">Municipal Corporation</option>
+                    <option value="Electricity Board">Electricity Board (EB)</option>
+                    <option value="Fire Station">Fire Station</option>
+                </select>
+            </div>
+
+            <button onclick="verifyOfficialLogin()" id="btn-official-login"
+                class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition mb-4">Login</button>
+            <button onclick="cancelLogin()" id="btn-official-cancel"
+                class="w-full text-gray-500 text-sm hover:text-gray-700">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="hidden-view min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow z-10">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center">
+                    <button onclick="logout()" class="mr-4 text-gray-500 hover:text-gray-700 md:hidden"><i
+                            class="fas fa-arrow-left"></i></button>
+                    <h1 class="text-xl font-bold text-gray-800" id="header-title">Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <select id="main-language-selector" onchange="setLanguage(this.value)"
+                        class="px-2 py-1 border border-gray-300 rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="en">English</option>
+                        <option value="ta">Tamil (தமிழ்)</option>
+                        <option value="hi">Hindi (हिंदी)</option>
+                    </select>
+                    <div id="citizen-badge"
+                        class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold hidden">
+                        Citizen</div>
+                    <button onclick="logout()"
+                        class="text-red-500 hover:text-red-700 text-sm font-medium">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Citizen View -->
+        <main id="view-citizen" class="flex-grow container mx-auto px-4 py-6 hidden-view">
+            <div id="citizen-warning" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 hidden"
+                role="alert">
+                <p class="font-bold">Warning!</p>
+                <p id="warning-text">You have submitted a fake complaint.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Report Form -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h2 class="text-lg font-bold mb-4" id="report-title">Report New Issue</h2>
+                        <form id="citizen-form">
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700" id="label-name">Reporter
+                                    Name</label>
+                                <input type="text" id="c-name"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2"
+                                    placeholder="Your Name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700" id="label-mobile">Mobile
+                                    Number</label>
+                                <input type="tel" id="c-mobile"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2 bg-gray-50 cursor-not-allowed"
+                                    placeholder="Mobile Number" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700" id="label-type">Problem
+                                    Type</label>
+                                <select id="c-type"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
+                                    required>
+                                    <option value="" id="opt-type-default">Select...</option>
+                                    <option value="Roads" id="opt-type-roads">Damaged Roads</option>
+                                    <option value="Water" id="opt-type-water">Water Leakage</option>
+                                    <option value="Garbage" id="opt-type-garbage">Garbage Piling</option>
+                                    <option value="Drainage" id="opt-type-drainage">Drainage Cleaning</option>
+                                    <option value="Streetlight" id="opt-type-streetlight">Streetlight Issue</option>
+                                    <option value="Other" id="opt-type-other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700"
+                                    id="label-district">District</label>
+                                <select id="c-district"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
+                                    required>
+                                    <option value="" id="opt-dist-default">Select District...</option>
+                                    <option value="Ariyalur">Ariyalur</option>
+                                    <option value="Chengalpattu">Chengalpattu</option>
+                                    <option value="Chennai">Chennai</option>
+                                    <option value="Coimbatore">Coimbatore</option>
+                                    <option value="Cuddalore">Cuddalore</option>
+                                    <option value="Dharmapuri">Dharmapuri</option>
+                                    <option value="Dindigul">Dindigul</option>
+                                    <option value="Erode">Erode</option>
+                                    <option value="Kallakurichi">Kallakurichi</option>
+                                    <option value="Kancheepuram">Kancheepuram</option>
+                                    <option value="Kanyakumari">Kanyakumari</option>
+                                    <option value="Karur">Karur</option>
+                                    <option value="Krishnagiri">Krishnagiri</option>
+                                    <option value="Madurai">Madurai</option>
+                                    <option value="Mayiladuthurai">Mayiladuthurai</option>
+                                    <option value="Nagapattinam">Nagapattinam</option>
+                                    <option value="Namakkal">Namakkal</option>
+                                    <option value="Nilgiris">Nilgiris</option>
+                                    <option value="Perambalur">Perambalur</option>
+                                    <option value="Pudukkottai">Pudukkottai</option>
+                                    <option value="Ramanathapuram">Ramanathapuram</option>
+                                    <option value="Ranipet">Ranipet</option>
+                                    <option value="Salem">Salem</option>
+                                    <option value="Sivaganga">Sivaganga</option>
+                                    <option value="Tenkasi">Tenkasi</option>
+                                    <option value="Thanjavur">Thanjavur</option>
+                                    <option value="Theni">Theni</option>
+                                    <option value="Thoothukudi">Thoothukudi</option>
+                                    <option value="Tiruchirappalli">Tiruchirappalli</option>
+                                    <option value="Tirunelveli">Tirunelveli</option>
+                                    <option value="Tirupathur">Tirupathur</option>
+                                    <option value="Tiruppur">Tiruppur</option>
+                                    <option value="Tiruvallur">Tiruvallur</option>
+                                    <option value="Tiruvannamalai">Tiruvannamalai</option>
+                                    <option value="Tiruvarur">Tiruvarur</option>
+                                    <option value="Vellore">Vellore</option>
+                                    <option value="Viluppuram">Viluppuram</option>
+                                    <option value="Virudhunagar">Virudhunagar</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700"
+                                    id="label-pincode">Pincode</label>
+                                <input type="number" id="c-pincode"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2"
+                                    placeholder="6-digit Pincode" required min="100000" max="999999">
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700"
+                                    id="label-desc">Description</label>
+                                <textarea id="c-desc" rows="3"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2"
+                                    placeholder="Describe the issue..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700"
+                                    id="label-location">Location</label>
+                                <div class="flex space-x-2">
+                                    <input type="text" id="c-loc"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2"
+                                        placeholder="Area / Street Details" required>
+                                    <button type="button" onclick="getLiveLocation()"
+                                        class="mt-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded"
+                                        title="Use Live Location">
+                                        <i class="fas fa-map-marker-alt text-red-500"></i>
+                                    </button>
+                                </div>
+                                <input type="hidden" id="c-coords">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" id="label-camera">Evidence
+                                    (Live Camera)</label>
+
+                                <!-- Camera Interface -->
+                                <div id="camera-container" class="relative bg-gray-900 rounded-lg overflow-hidden">
+                                    <!-- Camera Feed -->
+                                    <video id="camera-feed"
+                                        class="w-full h-64 bg-black rounded-lg hidden object-cover"></video>
+
+                                    <!-- Canvas (hidden) -->
+                                    <canvas id="camera-canvas" class="hidden"></canvas>
+
+                                    <!-- Grid Overlay for composition -->
+                                    <div id="camera-grid"
+                                        class="hidden pointer-events-none absolute inset-0 w-full h-64"
+                                        style="background-image: linear-gradient(0deg, transparent 24%, rgba(255,255,255,.5) 25%, rgba(255,255,255,.5) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.5) 75%, rgba(255,255,255,.5) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255,255,255,.5) 25%, rgba(255,255,255,.5) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.5) 75%, rgba(255,255,255,.5) 76%, transparent 77%, transparent); background-size: 50px 50px;">
+                                    </div>
+
+                                    <!-- Camera Status Badge -->
+                                    <div id="camera-status-badge"
+                                        class="hidden absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold flex items-center">
+                                        <i class="fas fa-circle animate-pulse mr-1" style="font-size: 8px;"></i>
+                                        <span>LIVE</span>
+                                    </div>
+
+                                    <!-- Captured Image -->
+                                    <img id="captured-image"
+                                        class="w-full h-auto rounded-lg hidden border max-h-64 object-cover">
+
+                                    <!-- No Camera State -->
+                                    <div id="camera-no-access"
+                                        class="w-full h-64 rounded-lg hidden bg-gray-800 flex items-center justify-center">
+                                        <div class="text-center text-white">
+                                            <i class="fas fa-camera text-4xl mb-2 opacity-50"></i>
+                                            <p class="text-sm">Click "Start Camera" to begin</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Camera Controls -->
+                                    <div class="mt-2 space-y-2">
+                                        <!-- Top Row Controls -->
+                                        <div class="flex space-x-2">
+                                            <button type="button" onclick="startCamera()" id="btn-start-camera"
+                                                class="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 font-bold transition flex items-center justify-center">
+                                                <i class="fas fa-play mr-2"></i>Start Camera
+                                            </button>
+                                            <button type="button" onclick="stopCameraFeed()" id="btn-stop-camera"
+                                                class="flex-1 bg-red-600 text-white py-2 rounded-md hover:bg-red-700 font-bold transition hidden flex items-center justify-center">
+                                                <i class="fas fa-stop mr-2"></i>Stop
+                                            </button>
+                                        </div>
+
+                                        <!-- Capture Row Controls -->
+                                        <div class="flex space-x-2">
+                                            <button type="button" onclick="toggleGridOverlay()" id="btn-grid"
+                                                class="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 font-bold transition hidden">
+                                                <i class="fas fa-th mr-2"></i>Grid
+                                            </button>
+                                            <button type="button" onclick="switchCamera()" id="btn-flip-camera"
+                                                class="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 font-bold transition hidden">
+                                                <i class="fas fa-sync-alt mr-2"></i>Flip
+                                            </button>
+                                            <button type="button" onclick="capturePhoto()" id="btn-capture"
+                                                class="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-bold hidden transition flex items-center justify-center">
+                                                <i class="fas fa-dot-circle mr-2"></i>Capture
+                                            </button>
+                                        </div>
+
+                                        <!-- Retake Row -->
+                                        <div class="flex space-x-2">
+                                            <button type="button" onclick="retakePhoto()" id="btn-retake"
+                                                class="flex-1 bg-yellow-500 text-white py-2 rounded-md hover:bg-yellow-600 font-bold hidden transition">
+                                                <i class="fas fa-redo mr-2"></i>Retake
+                                            </button>
+                                            <button type="button" onclick="acceptPhoto()" id="btn-accept"
+                                                class="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 font-bold hidden transition">
+                                                <i class="fas fa-check mr-2"></i>Accept
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status Message -->
+                                    <div class="mt-2 p-2 bg-gray-100 rounded text-center">
+                                        <p id="camera-status" class="text-xs text-gray-600 font-medium">
+                                            <i class="fas fa-camera mr-1"></i>
+                                            <span id="status-text">Camera ready. Click Start to begin.</span>
+                                        </p>
+                                        <p id="camera-error" class="text-xs text-red-600 mt-1 hidden font-bold">
+                                            <i class="fas fa-exclamation-circle mr-1"></i>
+                                            <span id="error-text"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit"
+                                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
+                                id="btn-submit">Submit Complaint</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- My Complaints -->
+                <div class="lg:col-span-2">
+                    <h2 class="text-lg font-bold mb-4" id="my-complaints-title">My Complaints</h2>
+                    <div id="citizen-complaints-list" class="space-y-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Municipal View -->
+        <main id="view-municipal" class="flex-grow container mx-auto px-4 py-6 hidden-view">
+            <h2 class="text-2xl font-bold mb-6" id="municipal-portal-title">Incoming Complaints for Verification</h2>
+
+            <!-- Category Tabs -->
+            <div class="mb-6 flex border-b border-gray-300 gap-2">
+                <button onclick="switchMunicipalCategory('submitted')" id="tab-submitted"
+                    class="px-4 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none">
+                    <i class="fas fa-file-alt mr-2"></i>Submitted
+                </button>
+                <button onclick="switchMunicipalCategory('forwarded')" id="tab-forwarded"
+                    class="px-4 py-3 font-semibold text-gray-600 border-b-2 border-transparent hover:text-gray-800 focus:outline-none">
+                    <i class="fas fa-paper-plane mr-2"></i>Forwarded
+                </button>
+                <button onclick="switchMunicipalCategory('in-progress')" id="tab-in-progress"
+                    class="px-4 py-3 font-semibold text-gray-600 border-b-2 border-transparent hover:text-gray-800 focus:outline-none">
+                    <i class="fas fa-hourglass-half mr-2"></i>In Progress
+                </button>
+                <button onclick="switchMunicipalCategory('resolved')" id="tab-resolved"
+                    class="px-4 py-3 font-semibold text-gray-600 border-b-2 border-transparent hover:text-gray-800 focus:outline-none">
+                    <i class="fas fa-check-circle mr-2"></i>Resolved
+                </button>
+                <button onclick="switchMunicipalCategory('rejected')" id="tab-rejected"
+                    class="px-4 py-3 font-semibold text-gray-600 border-b-2 border-transparent hover:text-gray-800 focus:outline-none">
+                    <i class="fas fa-times-circle mr-2"></i>Rejected
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Complaint</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Department</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="municipal-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </main>
+
+        <!-- Dept View -->
+        <main id="view-dept" class="flex-grow container mx-auto px-4 py-6 hidden-view">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold" id="dept-portal-title">Department Tasks</h2>
+                <div id="dept-display" class="border p-2 rounded bg-white">
+                    <span class="text-sm font-medium text-gray-700">Department:</span>
+                    <span id="dept-name" class="ml-2 text-sm font-semibold text-gray-800">Department</span>
+                </div>
+            </div>
+
+            <!-- Status Category Tabs -->
+            <div class="mb-6 flex border-b border-gray-300 gap-2">
+                <button onclick="switchDeptCategory('forwarded')" id="dept-tab-forwarded"
+                    class="px-4 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none">
+                    <i class="fas fa-paper-plane mr-2"></i>Forwarded
+                </button>
+                <button onclick="switchDeptCategory('in-progress')" id="dept-tab-in-progress"
+                    class="px-4 py-3 font-semibold text-gray-600 border-b-2 border-transparent hover:text-gray-800 focus:outline-none">
+                    <i class="fas fa-tools mr-2"></i>In Progress
+                </button>
+                <button onclick="switchDeptCategory('resolved')" id="dept-tab-resolved"
+                    class="px-4 py-3 font-semibold text-gray-600 border-b-2 border-transparent hover:text-gray-800 focus:outline-none">
+                    <i class="fas fa-check-double mr-2"></i>Resolved
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-6">
+                <div id="dept-tasks-list" class="space-y-6"></div>
+            </div>
+        </main>
+
+        <!-- Police View -->
+        <main id="view-police" class="flex-grow container mx-auto px-4 py-6 hidden-view">
+            <div class="mb-6 flex justify-between items-center">
+                <h2 class="text-2xl font-bold" id="police-portal-title">Police Dashboard</h2>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-6">
+                <div id="police-tasks-list" class="space-y-6"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- Data Management ---
+        const DB_KEY = 'smart_civic_data';
+        const USER_KEY = 'smart_civic_user_strikes';
+
+        // --- Language Translation System ---
+        const translations = {
+            en: {
+                mainTitle: "Civic Issues Reporting and Resolution System",
+                mainSubtitle: "Advanced Reporting & Resolution Platform",
+                roleCitizenTitle: "Citizen",
+                roleCitizenDesc: "Report issues & track progress",
+                roleMunicipalTitle: "Municipal Officer",
+                roleMunicipalDesc: "Verify & Forward complaints",
+                roleDeptTitle: "Dept. Official",
+                roleDeptDesc: "Resolve issues & Upload Proof",
+                rolePoliceTitle: "Police Officer",
+                rolePoliceDesc: "Handle fake-report investigations",
+                loginTitle: "Citizen Login",
+                labelLoginPhone: "Phone Number",
+                enterPhone: "Enter 10-digit number",
+                getOtp: "Get OTP",
+                labelEnterOtp: "Enter OTP",
+                enterOtpSent: "Enter OTP sent to phone",
+                verifyLogin: "Verify & Login",
+                cancel: "Cancel",
+                reportTitle: "Report New Issue",
+                reporterName: "Reporter Name",
+                yourName: "Your Name",
+                mobileNumber: "Mobile Number",
+                problemType: "Problem Type",
+                selectOption: "Select...",
+                damagedRoads: "Damaged Roads",
+                waterLeakage: "Water Leakage",
+                garbagePiling: "Garbage Piling",
+                drainageCleaning: "Drainage Cleaning",
+                streetlightIssue: "Streetlight Issue",
+                other: "Other",
+                district: "District",
+                selectDistrict: "Select District...",
+                pincode: "Pincode",
+                pincodePlaceholder: "6-digit Pincode",
+                description: "Description",
+                describeIssue: "Describe the issue...",
+                location: "Location",
+                areaStreetDetails: "Area / Street Details",
+                evidenceCamera: "Evidence (Live Camera)",
+                startCamera: "Start Camera",
+                stopCamera: "Stop",
+                captureBtn: "Capture",
+                submitBtn: "Submit Complaint",
+                myComplaints: "My Complaints",
+                headerDashboard: "Dashboard",
+                logout: "Logout",
+                officialLoginTitle: "Official Login",
+                labelUserId: "User ID",
+                placeholderUserId: "Enter ID",
+                labelPassword: "Password",
+                placeholderPassword: "Enter Password",
+                labelOfficialPincode: "Pincode",
+                placeholderOfficialPincode: "Enter 6-digit Pincode",
+                labelOfficialDept: "Department",
+                optOfficialDeptDefault: "Select Department...",
+                btnLogin: "Login",
+                btnOfficialCancel: "Cancel",
+                municipalPortal: "Municipal Verification Portal",
+                deptPortal: "Department Action Portal",
+                policePortal: "Law Enforcement Dashboard"
+            },
+            ta: {
+                mainTitle: "சிவிக் பிரச்சனைகள் புகார் மற்றும் தீர்வு முறைமை",
+                mainSubtitle: "மேம்பட்ட அறிக்கை மற்றும் தீர்வு தளம்",
+                roleCitizenTitle: "குடிமகன்",
+                roleCitizenDesc: "சிக்கல்களைப் புகாரளிக்கவும் மற்றும் முன்னேற்றத்தைக் கண்காணிக்கவும்",
+                roleMunicipalTitle: "நகராட்சி அதிகாரி",
+                roleMunicipalDesc: "புகார்களைச் சரிபார்த்து அனுப்பவும்",
+                roleDeptTitle: "துறை அதிகாரி",
+                roleDeptDesc: "சிக்கல்களைத் தீர்க்கவும் மற்றும் ஆதாரத்தைப் பதிவேற்றவும்",
+                rolePoliceTitle: "காவல் அதிகாரி",
+                rolePoliceDesc: "போலி புகார் விசாரணைகளைக் கையாளவும்",
+                loginTitle: "குடிமகன் உள்நுழைவு",
+                labelLoginPhone: "தொலைபேசி எண்",
+                enterPhone: "10 இலக்க எண்ணை உள்ளிடவும்",
+                getOtp: "OTP பெறுக",
+                labelEnterOtp: "OTP-ஐ உள்ளிடவும்",
+                enterOtpSent: "தொலைபேசிக்கு அனுப்பப்பட்ட OTP-ஐ உள்ளிடவும்",
+                verifyLogin: "சரிபார்த்து உள்நுழையவும்",
+                cancel: "ரத்து செய்",
+                reportTitle: "புதிய சிக்கலைப் புகாரளிக்கவும்",
+                reporterName: "அறிக்கையாளர் பெயர்",
+                yourName: "உங்கள் பெயர்",
+                mobileNumber: "மொபைல் எண்",
+                problemType: "சிக்கல் வகை",
+                selectOption: "தேர்ந்தெடுக்கவும்...",
+                damagedRoads: "சேதமடைந்த சாலைகள்",
+                waterLeakage: "நீர் கசிவு",
+                garbagePiling: "குப்பை குவியல்",
+                drainageCleaning: "வடிகால் சுத்தம் செய்தல்",
+                streetlightIssue: "தெருவிளக்கு பிரச்சினை",
+                other: "மற்றவை",
+                district: "மாவட்டம்",
+                selectDistrict: "மாவட்டத்தைத் தேர்ந்தெடுக்கவும்...",
+                pincode: "பின் கோடு",
+                pincodePlaceholder: "6 இலக்க பின் கோடு",
+                description: "விளக்கம்",
+                describeIssue: "சிக்கலை விவரிக்கவும்...",
+                location: "இடம்",
+                areaStreetDetails: "பகுதி / தெரு விவரங்கள்",
+                evidenceCamera: "ஆதாரம் (நேரலை கேமரா)",
+                startCamera: "கேமராவைத் தொடங்கு",
+                stopCamera: "நிறுத்து",
+                captureBtn: "புகைப்படம் எடு",
+                submitBtn: "புகாரைச் சமர்ப்பிக்கவும்",
+                myComplaints: "எனது புகார்கள்",
+                headerDashboard: "முகப்பு",
+                logout: "வெளியேறு",
+                officialLoginTitle: "அதிகாரி உள்நுழைவு",
+                labelUserId: "பயனர் ஐடி",
+                placeholderUserId: "ஐடியை உள்ளிடவும்",
+                labelPassword: "கடவுச்சொல்",
+                placeholderPassword: "கடவுச்சொல்லை உள்ளிடவும்",
+                labelOfficialPincode: "பின் கோடு",
+                placeholderOfficialPincode: "6 இலக்க பின் கோட்டை உள்ளிடவும்",
+                labelOfficialDept: "துறை",
+                optOfficialDeptDefault: "துறையைத் தேர்ந்தெடுக்கவும்...",
+                btnLogin: "உள்நுழை",
+                btnOfficialCancel: "ரத்து செய்",
+                municipalPortal: "நகராட்சி சரிபார்ப்பு போர்டல்",
+                deptPortal: "துறை நடவடிக்கை போர்டல்",
+                policePortal: "சட்டம் ஒழுங்கு டாஷ்போர்டு"
+            },
+            hi: {
+                mainTitle: "नागरिक समस्या रिपोर्टिंग और समाधान प्रणाली",
+                mainSubtitle: "उन्नत रिपोर्टिंग और समाधान मंच",
+                roleCitizenTitle: "नागरिक",
+                roleCitizenDesc: "समस्याओं की रिपोर्ट करें और प्रगति को ट्रैक करें",
+                roleMunicipalTitle: "नगर पालिका अधिकारी",
+                roleMunicipalDesc: "शिकायतों को सत्यापित और अग्रेषित करें",
+                roleDeptTitle: "विभाग अधिकारी",
+                roleDeptDesc: "समस्याओं का समाधान करें और प्रमाण अपलोड करें",
+                rolePoliceTitle: "पुलिस अधिकारी",
+                rolePoliceDesc: "फर्जी रिपोर्ट जांच संभालें",
+                loginTitle: "नागरिक लॉगिन",
+                labelLoginPhone: "फोन नंबर",
+                enterPhone: "10-अंकों का नंबर दर्ज करें",
+                getOtp: "ओटीपी प्राप्त करें",
+                labelEnterOtp: "ओटीपी दर्ज करें",
+                enterOtpSent: "फोन पर भेजा गया ओटीपी दर्ज करें",
+                verifyLogin: "सत्यापित करें और लॉगिन करें",
+                cancel: "रद्द करें",
+                reportTitle: "नई समस्या की रिपोर्ट करें",
+                reporterName: "रिपोर्टर का नाम",
+                yourName: "आपका नाम",
+                mobileNumber: "मोबाइल नंबर",
+                problemType: "समस्या का प्रकार",
+                selectOption: "चुनें...",
+                damagedRoads: "खराब सड़कें",
+                waterLeakage: "पानी का रिसाव",
+                garbagePiling: "कचरे का ढेर",
+                drainageCleaning: "नाली की सफाई",
+                streetlightIssue: "स्ट्रीटलाइट की समस्या",
+                other: "अन्य",
+                district: "जिला",
+                selectDistrict: "जिला चुनें...",
+                pincode: "पिनकोड",
+                pincodePlaceholder: "6-अंकों का पिनकोड",
+                description: "विवरण",
+                describeIssue: "समस्या का वर्णन करें...",
+                location: "स्थान",
+                areaStreetDetails: "क्षेत्र / सड़क का विवरण",
+                evidenceCamera: "प्रमाण (लाइव कैमरा)",
+                startCamera: "कैमरा शुरू करें",
+                stopCamera: "बंद करें",
+                captureBtn: "फोटो लें",
+                submitBtn: "शिकायत जमा करें",
+                myComplaints: "मेरी शिकायतें",
+                headerDashboard: "डैशबोर्ड",
+                logout: "लॉगआउट",
+                officialLoginTitle: "आधिकारिक लॉगिन",
+                labelUserId: "यूजर आईडी",
+                placeholderUserId: "आईडी दर्ज करें",
+                labelPassword: "पासवर्ड",
+                placeholderPassword: "पासवर्ड दर्ज करें",
+                labelOfficialPincode: "पिनकोड",
+                placeholderOfficialPincode: "6-अंकों का पिनकोड दर्ज करें",
+                labelOfficialDept: "विभाग",
+                optOfficialDeptDefault: "विभाग चुनें...",
+                btnLogin: "लॉगिन",
+                btnOfficialCancel: "रद्द करें",
+                municipalPortal: "नगर पालिका सत्यापन पोर्टल",
+                deptPortal: "विभाग कार्रवाई पोर्टल",
+                policePortal: "कानून प्रवर्तन डैशबोर्ड"
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            const key = (currentUserRole || 'home') + 'Language';
+            localStorage.setItem(key, lang);
+            applyTranslations(lang);
+            // Sync any existing selectors
+            const homeSelector = document.getElementById('home-language-selector');
+            if (homeSelector) homeSelector.value = lang;
+            const mainSelector = document.getElementById('main-language-selector');
+            if (mainSelector) mainSelector.value = lang;
+        }
+
+        function applyTranslations(lang) {
+            const t = translations[lang] || translations['en'];
+
+            const map = {
+                'main-title': 'mainTitle',
+                'main-subtitle': 'mainSubtitle',
+                'role-citizen-title': 'roleCitizenTitle',
+                'role-citizen-desc': 'roleCitizenDesc',
+                'role-municipal-title': 'roleMunicipalTitle',
+                'role-municipal-desc': 'roleMunicipalDesc',
+                'role-dept-title': 'roleDeptTitle',
+                'role-dept-desc': 'roleDeptDesc',
+                'role-police-title': 'rolePoliceTitle',
+                'role-police-desc': 'rolePoliceDesc',
+                'login-title': 'loginTitle',
+                'label-login-phone': 'labelLoginPhone',
+                'btn-get-otp': 'getOtp',
+                'label-enter-otp': 'labelEnterOtp',
+                'btn-verify-login': 'verifyLogin',
+                'btn-login-cancel': 'cancel',
+                'header-title': 'headerDashboard',
+                'report-title': 'reportTitle',
+                'label-name': 'reporterName',
+                'label-mobile': 'mobileNumber',
+                'label-type': 'problemType',
+                'label-district': 'district',
+                'label-pincode': 'pincode',
+                'label-desc': 'description',
+                'label-location': 'location',
+                'label-camera': 'evidenceCamera',
+                'my-complaints-title': 'myComplaints',
+                'btn-submit': 'submitBtn',
+                'opt-type-default': 'selectOption',
+                'opt-type-roads': 'damagedRoads',
+                'opt-type-water': 'waterLeakage',
+                'opt-type-garbage': 'garbagePiling',
+                'opt-type-drainage': 'drainageCleaning',
+                'opt-type-streetlight': 'streetlightIssue',
+                'opt-type-other': 'other',
+                'opt-dist-default': 'selectDistrict',
+                'official-login-title': 'officialLoginTitle',
+                'label-official-id': 'labelUserId',
+                'label-official-pass': 'labelPassword',
+                'label-official-pincode': 'labelOfficialPincode',
+                'label-official-dept': 'labelOfficialDept',
+                'btn-official-login': 'btnLogin',
+                'btn-official-cancel': 'btnOfficialCancel',
+                'municipal-portal-title': 'municipalPortal',
+                'dept-portal-title': 'deptPortal',
+                'police-portal-title': 'policePortal',
+                'tab-submitted': 'tabSubmitted',
+                'tab-forwarded': 'tabForwarded',
+                'tab-in-progress': 'tabInProgress',
+                'tab-resolved': 'tabResolved',
+                'dept-tab-forwarded': 'tabForwarded',
+                'dept-tab-in-progress': 'tabInProgress',
+                'dept-tab-resolved': 'tabResolved'
+            };
+
+            Object.keys(map).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = t[map[id]];
+            });
+
+            // Update placeholders
+            const inputs = {
+                'login-phone': 'enterPhone',
+                'login-otp': 'enterOtpSent',
+                'c-name': 'yourName',
+                'c-pincode': 'pincodePlaceholder',
+                'c-desc': 'describeIssue',
+                'c-loc': 'areaStreetDetails',
+                'official-id': 'placeholderUserId',
+                'official-pass': 'placeholderPassword',
+                'official-pincode': 'placeholderOfficialPincode'
+            };
+
+            Object.keys(inputs).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.placeholder = t[inputs[id]];
+            });
+        }
+
+        function updateCitizenViewLanguage() {
+            applyTranslations(currentLanguage);
+        }
+
+        function getSavedLanguage() {
+            const key = (currentUserRole || 'home') + 'Language';
+            return localStorage.getItem(key) || 'en';
+        }
+
+        function getData() {
+            return JSON.parse(localStorage.getItem(DB_KEY)) || [];
+        }
+
+        function saveData(data) {
+            localStorage.setItem(DB_KEY, JSON.stringify(data));
+        }
+
+        function getUserStrikes() {
+            return parseInt(localStorage.getItem(USER_KEY)) || 0;
+        }
+
+        function incrementStrikes() {
+            const current = getUserStrikes() + 1;
+            localStorage.setItem(USER_KEY, current);
+            return current;
+        }
+
+        // --- App State ---
+        let currentUserRole = null;
+        let currentUserPhone = null; // Track citizen's phone number
+        let currentMunicipalCategory = 'submitted'; // Track category filter
+        let currentDeptCategory = 'forwarded'; // Track dept category filter
+        let currentDeptName = null; // Track logged-in department for Dept. Official
+
+        function login(role, dept = null) {
+            currentUserRole = role;
+            document.getElementById('role-selection').classList.add('hidden-view');
+            document.getElementById('app-container').classList.remove('hidden-view');
+
+            // Setup Header
+            const badges = {
+                'citizen': { text: 'Citizen', color: 'bg-blue-100 text-blue-800' },
+                'municipal': { text: 'Municipal Officer', color: 'bg-purple-100 text-purple-800' },
+                'dept': { text: 'Dept. Official', color: 'bg-green-100 text-green-800' },
+                'police': { text: 'Police Officer', color: 'bg-red-100 text-red-800' }
+            };
+            const badge = document.getElementById('user-badge');
+            // If dept role and a specific department was provided, show department name
+            if (role === 'dept' && dept) {
+                badge.textContent = dept;
+            } else {
+                badge.textContent = badges[role].text;
+            }
+            badge.className = `px-3 py-1 rounded-full text-xs font-bold ${badges[role].color}`;
+
+            // Reset language to specific role preference
+            setLanguage(getSavedLanguage());
+
+            // Show View
+            document.querySelectorAll('main').forEach(el => el.classList.add('hidden-view'));
+            document.getElementById(`view-${role}`).classList.remove('hidden-view');
+
+            if (role === 'citizen') initCitizen();
+            if (role === 'municipal') initMunicipal();
+            if (role === 'dept') {
+                // If dept was provided during login, store it and render
+                if (dept) {
+                    currentDeptName = dept;
+                    const deptNameEl = document.getElementById('dept-name');
+                    if (deptNameEl) deptNameEl.textContent = dept;
+                }
+                initDept();
+            }
+            if (role === 'police') initPolice();
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        // --- Login Logic ---
+        let generatedOtp = null;
+
+        function showCitizenLogin() {
+            document.getElementById('role-selection').classList.add('hidden-view');
+            document.getElementById('citizen-login-modal').classList.remove('hidden-view');
+            // Reset state
+            document.getElementById('login-step-1').classList.remove('hidden');
+            document.getElementById('login-step-2').classList.add('hidden');
+            document.getElementById('login-phone').value = '';
+            document.getElementById('login-otp').value = '';
+        }
+
+        function cancelLogin() {
+            document.getElementById('citizen-login-modal').classList.add('hidden-view');
+            document.getElementById('role-selection').classList.remove('hidden-view');
+        }
+
+        function getOtp() {
+            const phone = document.getElementById('login-phone').value;
+            if (phone.length < 10) {
+                alert('Please enter a valid 10-digit phone number');
+                return;
+            }
+
+            generatedOtp = Math.floor(1000 + Math.random() * 9000);
+            alert(`Your OTP is: ${generatedOtp}`); // Simulation
+
+            document.getElementById('login-step-1').classList.add('hidden');
+            document.getElementById('login-step-2').classList.remove('hidden');
+            document.getElementById('otp-sent-msg').textContent = `OTP sent to ${phone}`;
+        }
+
+        function verifyOtp() {
+            const inputOtp = document.getElementById('login-otp').value;
+            if (parseInt(inputOtp) === generatedOtp) {
+                const phone = document.getElementById('login-phone').value;
+                currentUserPhone = phone; // Store citizen's phone number
+                // Get selected language from home page selector
+                const homeSelector = document.getElementById('home-language-selector');
+                const selectedLang = homeSelector ? homeSelector.value : 'en';
+                setLanguage(selectedLang); // Save and set the language
+                document.getElementById('citizen-login-modal').classList.add('hidden-view');
+                login('citizen');
+                // Set mobile number in form
+                const mobileInput = document.getElementById('c-mobile');
+                if (mobileInput) mobileInput.value = phone;
+            } else {
+                alert('Invalid OTP. Please try again.');
+            }
+        }
+
+        // --- Official Login Logic ---
+        let pendingRole = null;
+
+        function showOfficialLogin(role) {
+            pendingRole = role;
+            document.getElementById('role-selection').classList.add('hidden-view');
+            document.getElementById('official-login-modal').classList.remove('hidden-view');
+            let title = 'Official Login';
+            if (role === 'municipal') title = 'Municipal Officer Login';
+            else if (role === 'dept') title = 'Dept. Official Login';
+            else if (role === 'police') title = 'Police Officer Login';
+            document.getElementById('official-login-title').textContent = title;
+
+            // Reset
+            document.getElementById('official-id').value = '';
+            document.getElementById('official-pass').value = '';
+            document.getElementById('official-pincode').value = '';
+            const deptField = document.getElementById('official-dept-field');
+            const deptSelect = document.getElementById('official-dept');
+            if (deptField) {
+                if (role === 'dept') {
+                    deptField.classList.remove('hidden');
+                    if (deptSelect) deptSelect.required = true;
+                } else {
+                    deptField.classList.add('hidden');
+                    if (deptSelect) deptSelect.required = false;
+                }
+            }
+
+            const pincodeField = document.getElementById('official-pincode-field');
+            const pincodeInput = document.getElementById('official-pincode');
+            if (pincodeField) {
+                if (role === 'municipal' || role === 'dept' || role === 'police') {
+                    pincodeField.classList.remove('hidden');
+                    if (pincodeInput) pincodeInput.required = true;
+                } else {
+                    pincodeField.classList.add('hidden');
+                    if (pincodeInput) pincodeInput.required = false;
+                }
+            }
+
+            // Focus the first input for accessibility
+            const idInput = document.getElementById('official-id');
+            if (idInput) idInput.focus();
+        }
+
+        function cancelOfficialLogin() {
+            document.getElementById('official-login-modal').classList.add('hidden-view');
+            document.getElementById('role-selection').classList.remove('hidden-view');
+            pendingRole = null;
+        }
+
+        function verifyOfficialLogin() {
+            const id = document.getElementById('official-id').value;
+            const pass = document.getElementById('official-pass').value;
+
+            // Simple hardcoded check for prototype
+            if (id === 'admin' && pass === 'admin123') {
+                // If dept role, capture selected department
+                let deptValue = null;
+                if (pendingRole === 'dept') {
+                    const sel = document.getElementById('official-dept');
+                    if (sel) deptValue = sel.value;
+                }
+
+                // Capture pincode for officials
+                const pincode = document.getElementById('official-pincode').value;
+                if (!pincode && (pendingRole === 'municipal' || pendingRole === 'dept' || pendingRole === 'police')) {
+                    alert('Please enter a target pincode');
+                    return;
+                }
+
+                document.getElementById('official-login-modal').classList.add('hidden-view');
+                login(pendingRole, deptValue || pincode);
+            } else {
+                alert('Invalid Credentials! (Try: admin / admin123)');
+            }
+        }
+
+        // --- Citizen Logic ---
+        function initCitizen() {
+            // Apply saved language to the citizen view
+            const savedLang = getSavedLanguage();
+            currentLanguage = savedLang;
+            applyTranslations(currentLanguage);
+
+            const strikes = getUserStrikes();
+            const warningEl = document.getElementById('citizen-warning');
+            const warningText = document.getElementById('warning-text');
+            const formBtn = document.querySelector('#citizen-form button');
+
+            if (strikes > 0) {
+                warningEl.classList.remove('hidden');
+                if (strikes === 1) warningText.textContent = "⚠️ Warning 1/3: You submitted a fake complaint. Future verification failures will lead to action.";
+                if (strikes === 2) warningText.textContent = "⚠️ Final Warning 2/3: One more fake complaint and you will be reported to the Police.";
+                if (strikes >= 3) {
+                    warningText.textContent = "🚨 ALERT: Your details have been sent to the Police Station for submitting multiple fake complaints. Any further fake reports will be forwarded to law enforcement.";
+                    // Form remains enabled - user can continue to submit complaints
+                }
+            }
+
+            renderCitizenComplaints();
+        }
+
+        document.getElementById('citizen-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('c-name').value.trim();
+            const type = document.getElementById('c-type').value.trim();
+            const district = document.getElementById('c-district').value.trim();
+            const pincode = document.getElementById('c-pincode').value.trim();
+            const desc = document.getElementById('c-desc').value.trim();
+            const loc = document.getElementById('c-loc').value.trim();
+            const coords = document.getElementById('c-coords').value.trim();
+            const mobile = document.getElementById('c-mobile').value.trim();
+
+            // Validate all fields are filled
+            if (!name) {
+                alert('❌ Error: Please enter your Name.');
+                return;
+            }
+            if (!type) {
+                alert('❌ Error: Please select a Problem Type.');
+                return;
+            }
+            if (!district) {
+                alert('❌ Error: Please select a District.');
+                return;
+            }
+            if (!pincode) {
+                alert('❌ Error: Please enter a Pincode.');
+                return;
+            }
+            if (!/^\d{6}$/.test(pincode)) {
+                alert('❌ Error: Pincode must be exactly 6 digits.');
+                return;
+            }
+            if (!desc) {
+                alert('❌ Error: Please enter a Description of the issue.');
+                return;
+            }
+            if (!loc) {
+                alert('❌ Error: Please enter the Location details.');
+                return;
+            }
+            if (!capturedPhotoData) {
+                alert('❌ Error: Please capture a photo of the issue. Click "Start Camera" and take a photo.');
+                return;
+            }
+
+            // All validations passed
+            processComplaintSubmission(name, type, district, pincode, desc, loc, coords, mobile, capturedPhotoData);
+        });
+
+        function processComplaintSubmission(name, type, district, pincode, desc, loc, coords, mobile, photoData) {
+            const complaints = getData();
+            complaints.push({
+                id: Date.now(),
+                name,
+                type,
+                district,
+                pincode,
+                desc,
+                loc,
+                status: 'Submitted', // Submitted -> Verified -> Forwarded -> In Progress -> Resolved
+                date: new Date().toLocaleDateString(),
+                department: null,
+                notes: null,
+                photo: photoData, // Store the base64 string
+                resolutionPhoto: null,
+                coordinates: coords || null,
+                user: 'current_user',
+                phoneNumber: mobile || currentUserPhone || 'Not Available', // Store complainer's phone number
+                isFakeReport: false // Track if marked as fake
+            });
+            saveData(complaints);
+
+            document.getElementById('citizen-form').reset();
+            resetCameraUI(); // Reset camera state
+            renderCitizenComplaints();
+            alert('Complaint Submitted Successfully! Sent to Municipal Office for verification.');
+        }
+
+        function renderCitizenComplaints() {
+            const list = document.getElementById('citizen-complaints-list');
+            const data = getData(); // In real app filter by user
+
+            list.innerHTML = data.map(c => `
+                <div class="bg-white p-4 rounded-lg shadow border-l-4 ${getStatusColor(c.status)}">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-gray-800">${c.type} <span class="text-xs font-normal text-gray-500">(${c.district || 'District N/A'} - ${c.pincode || 'N/A'})</span></h4>
+                            <p class="text-sm text-gray-600">${c.desc}</p>
+                            <p class="text-xs text-gray-400 mt-1"><i class="fas fa-map-marker-alt"></i> ${c.loc}</p>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-1 bg-gray-100 rounded">${c.status}</span>
+                    </div>
+                    ${c.notes ? `<p class="mt-2 text-xs text-indigo-600 bg-indigo-50 p-2 rounded"><strong>Update:</strong> ${c.notes}</p>` : ''}
+
+                    ${c.resolutionPhoto ? `
+                    <div class="mt-2 border-t pt-2">
+                        <p class="text-xs font-bold text-green-600 mb-1">Resolution Proof:</p>
+                        <img src="${c.resolutionPhoto}" alt="Resolution Proof" class="h-32 w-auto rounded-md border shadow-sm cursor-pointer hover:opacity-90 transition" onclick="window.open(this.src)" title="Click to View Full Size">
+                    </div>` : ''}
+                </div>
+            `).join('');
+
+            if (data.length === 0) list.innerHTML = '<p class="text-gray-500 text-center">No complaints yet.</p>';
+        }
+
+        function getStatusColor(status) {
+            if (status === 'Submitted') return 'border-gray-500';
+            if (status === 'Forwarded') return 'border-purple-500';
+            if (status === 'In Progress') return 'border-yellow-500';
+            if (status === 'Resolved') return 'border-green-500';
+            if (status === 'Rejected') return 'border-red-500';
+            return 'border-gray-500';
+        }
+
+        // --- Municipal Logic ---
+        function initMunicipal() {
+            currentMunicipalCategory = 'submitted'; // Reset to submitted tab
+            renderMunicipalTable();
+        }
+
+        window.switchMunicipalCategory = function (category) {
+            currentMunicipalCategory = category;
+
+            // Update tab styles
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+                tab.classList.remove('text-blue-600', 'border-blue-600');
+                tab.classList.add('text-gray-600', 'border-transparent');
+            });
+
+            const activeTab = document.getElementById(`tab-${category}`);
+            activeTab.classList.remove('text-gray-600', 'border-transparent');
+            activeTab.classList.add('text-blue-600', 'border-blue-600');
+
+            renderMunicipalTable();
+        };
+
+        function renderMunicipalTable() {
+            const tbody = document.getElementById('municipal-table-body');
+            const allData = getData();
+
+            // Filter by category
+            let filteredData = [];
+            if (currentMunicipalCategory === 'submitted') {
+                filteredData = allData.filter(c => c.status === 'Submitted');
+                filteredData.sort((a, b) => b.id - a.id);
+            } else if (currentMunicipalCategory === 'forwarded') {
+                filteredData = allData.filter(c => c.status === 'Forwarded' && !c.isFakeReport);
+                filteredData.sort((a, b) => b.id - a.id);
+            } else if (currentMunicipalCategory === 'in-progress') {
+                filteredData = allData.filter(c => c.status === 'In Progress');
+                filteredData.sort((a, b) => b.id - a.id);
+            } else if (currentMunicipalCategory === 'resolved') {
+                filteredData = allData.filter(c => c.status === 'Resolved');
+                filteredData.sort((a, b) => b.id - a.id);
+            } else if (currentMunicipalCategory === 'rejected') {
+                filteredData = allData.filter(c => c.status === 'Forwarded' && c.isFakeReport);
+                filteredData.sort((a, b) => b.id - a.id);
+            }
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-gray-500">
+                    <p class="text-base"><i class="fas fa-inbox mr-2"></i>No ${currentMunicipalCategory.replace('-', ' ')} complaints.</p>
+                </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filteredData.map(c => {
+                const isSubmitted = c.status === 'Submitted';
+
+                return `
+                <tr class="${!isSubmitted ? 'bg-gray-50' : ''}">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-bold text-gray-900">${c.name || 'Anonymous'}</div>
+                        <div class="text-sm font-medium text-gray-700">${c.type}</div>
+                        <div class="text-xs font-semibold text-blue-600 mb-1">
+                            ${c.district || 'District N/A'} <span class="text-gray-400">|</span> ${c.pincode || 'Pin: N/A'}
+                        </div>
+                        <div class="text-xs font-semibold text-green-700 bg-green-50 px-2 py-1 rounded inline-block mb-2">
+                            <i class="fas fa-phone mr-1"></i>Phone: ${c.phoneNumber || 'Not Available'}
+                        </div>
+                        <div class="text-sm text-gray-500 mb-2">${c.desc}</div>
+                       
+                        <div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                            <span class="font-semibold">Location:</span> ${c.loc}
+                            ${c.coordinates ? `
+                            <div class="mt-2 rounded overflow-hidden border border-gray-200 shadow-sm" style="height: 150px;">
+                                <iframe width="100%" height="100%" style="border:0;" loading="lazy" 
+                                    src="https://maps.google.com/maps?q=${c.coordinates.trim()}&z=14&output=embed">
+                                </iframe>
+                            </div>
+                            <div class="mt-1 flex justify-between items-center">
+                                <span class="text-[10px] text-gray-400 font-mono">${c.coordinates}</span>
+                                <a href="https://www.google.com/maps?q=${c.coordinates}" target="_blank" class="text-[10px] text-blue-600 hover:text-blue-800 font-bold">
+                                    <i class="fas fa-map-marker-alt mr-1 text-red-500"></i> Open in Google Maps ↗
+                                </a>
+                            </div>` : ''}
+                        </div>
+                       
+                        ${c.photo ? `
+                        <div class="mt-3">
+                            <p class="text-xs font-semibold text-gray-500 mb-1">Attached Photo:</p>
+                            <img src="${c.photo}" alt="Issue Photo" class="h-24 w-auto rounded-md border shadow-sm cursor-pointer hover:opacity-90 transition" onclick="window.open(this.src)" title="Click to View Full Size">
+                        </div>` : ''}
+
+                        ${c.resolutionPhoto ? `
+                        <div class="mt-3 border-t pt-2">
+                            <p class="text-xs font-bold text-green-600 mb-1">Resolution Proof:</p>
+                            <img src="${c.resolutionPhoto}" alt="Resolution Proof" class="h-24 w-auto rounded-md border shadow-sm cursor-pointer hover:opacity-90 transition" onclick="window.open(this.src)" title="Click to View Full Size">
+                        </div>` : ''}
+                    </td>
+                    <td class="px-6 py-4">
+                        ${isSubmitted ? `
+                        <select class="dept-select block w-full text-sm border-gray-300 rounded-md shadow-sm border p-1" id="dept-${c.id}">
+                            <option value="">Choose Dept...</option>
+                            <option value="Electricity Board">Electricity Board (EB)</option>
+                            <option value="Municipal Corporation">Municipal Corp (Road/Water/Drainage)</option>
+                            <option value="Fire Station">Fire Station</option>
+                        </select>
+                        ` : `
+                        <div class="text-sm text-gray-600">
+                            <span class="font-bold block">${c.department || 'N/A'}</span>
+                            <span class="text-xs text-gray-400">Assigned Dept.</span>
+                        </div>
+                        `}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        ${isSubmitted ? `
+                        <button onclick="verifyAndForward(${c.id})" class="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded mr-2 mb-1">Forward</button>
+                        ` : `
+                        <span class="px-2 py-1 rounded text-xs font-bold border ${getStatusColor(c.status)} bg-white text-gray-700">${c.status}</span>
+                        ${c.notes ? `<div class="text-xs text-gray-500 mt-2 italic max-w-xs break-words" title="${c.notes}">${c.notes}</div>` : ''}
+                        `}
+                    </td>
+                </tr>
+                `}).join('');
+        }
+
+        window.verifyAndForward = function (id) {
+            const dept = document.getElementById(`dept-${id}`).value;
+            if (!dept) { alert('Please select a department.'); return; }
+
+            const data = getData();
+            const item = data.find(c => c.id === id);
+            item.status = 'Forwarded';
+            item.department = dept;
+            item.notes = `Forwarded by Municipal Officer. Sent to ${dept}.`;
+            saveData(data);
+            renderMunicipalTable();
+        };
+
+        window.markFakeFromDept = function (id) {
+            if (!confirm('Are you sure this is a Fake Complaint? This will issue a strike to the reporter. After 3 strikes the complaint will be forwarded to Police.')) return;
+
+            const data = getData();
+            const item = data.find(c => c.id === id);
+
+            // Issue a strike to the reporter
+            const strikes = incrementStrikes();
+
+            if (strikes >= 3) {
+                // Escalate to police after 3 strikes
+                item.status = 'Forwarded';
+                item.department = 'Police Station';
+                item.isFakeReport = true; // Flag as fake report
+                item.notes = `FAKE COMPLAINT DETECTED by Dept. Official. \nComplainant: ${item.name} \nPhone: ${item.phoneNumber || 'Not Available'} \nForwarded to Police Station for action against false reporter.`;
+                saveData(data);
+
+                alert(`Fake Complaint flagged and forwarded to Police Station.\n\nComplainant Details Forward to Police:\nName: ${item.name}\nPhone: ${item.phoneNumber || 'Not Available'}\nStatus: ${strikes} strike(s) issued.\n\nACCOUNT BLOCKED - POLICE INVOLVED.`);
+            } else {
+                // Just a warning for now
+                item.status = 'Warning';
+                item.notes = `Warning ${strikes}/3: Complaint marked suspicious by Dept. Official. Further fake reports will be forwarded to Police.`;
+                saveData(data);
+
+                alert(`Warning issued. Strike ${strikes}/3 has been recorded for the reporter. After 3 strikes the complaint will be forwarded to Police.`);
+            }
+
+            renderDeptView();
+        };
+
+        // --- Dept Logic ---
+        function initDept() {
+            currentDeptCategory = 'forwarded'; // Reset to forwarded tab
+            renderDeptView();
+        }
+
+        window.switchDeptCategory = function (category) {
+            currentDeptCategory = category;
+
+            // Update tab styles
+            document.querySelectorAll('[id^="dept-tab-"]').forEach(tab => {
+                tab.classList.remove('text-blue-600', 'border-blue-600');
+                tab.classList.add('text-gray-600', 'border-transparent');
+            });
+
+            const activeTab = document.getElementById(`dept-tab-${category}`);
+            activeTab.classList.remove('text-gray-600', 'border-transparent');
+            activeTab.classList.add('text-blue-600', 'border-blue-600');
+
+            renderDeptView();
+        };
+
+        window.renderDeptView = function () {
+            const selectedDept = currentDeptName || (document.getElementById('dept-name') ? document.getElementById('dept-name').textContent : '');
+            const list = document.getElementById('dept-tasks-list');
+
+            // Special handling for Police Station view
+            if (selectedDept === 'Police Station') {
+                const data = getData().filter(c => c.department === 'Police Station' && c.isFakeReport);
+
+                list.innerHTML = data.map(c => `
+                <div class="border-2 border-red-500 rounded-lg p-6 bg-red-50">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg text-red-800">FAKE COMPLAINT REPORT</h3>
+                            <p class="text-sm text-red-600 font-semibold mt-1">${c.date}</p>
+                        </div>
+                        <span class="text-xs bg-red-600 text-white px-3 py-1 rounded-full font-bold">FORWARDED TO POLICE</span>
+                    </div>
+                   
+                    <div class="grid grid-cols-2 gap-4 mb-4 p-4 bg-white rounded border border-red-200">
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">COMPLAINANT NAME</p>
+                            <p class="text-lg font-bold text-red-800">${c.name || 'Not Available'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">LOGIN PHONE NUMBER</p>
+                            <p class="text-lg font-bold text-red-800">${c.phoneNumber || 'Not Available'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">PINCODE</p>
+                            <p class="text-lg font-bold">${c.pincode || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">DISTRICT</p>
+                            <p class="text-lg font-bold">${c.district || 'N/A'}</p>
+                        </div>
+                    </div>
+                   
+                    <div class="mb-4 p-3 bg-white rounded border border-red-200">
+                        <p class="text-xs font-bold text-gray-600 uppercase">FALSE COMPLAINT TYPE</p>
+                        <p class="font-bold text-red-700">${c.type}</p>
+                    </div>
+                   
+                    <div class="mb-4 p-3 bg-white rounded border border-red-200">
+                        <p class="text-xs font-bold text-gray-600 uppercase">FALSE DESCRIPTION</p>
+                        <p class="text-sm text-gray-700">${c.desc}</p>
+                    </div>
+                   
+                    <div class="mb-4 p-3 bg-white rounded border border-red-200">
+                        <p class="text-xs font-bold text-gray-600 uppercase">LOCATION DETAILS</p>
+                        <p class="text-sm text-gray-700">${c.loc}</p>
+                        ${c.coordinates ? `<p class="text-xs text-gray-500 mt-1"><strong>Coordinates:</strong> ${c.coordinates}</p>` : ''}
+                    </div>
+                   
+                    ${c.photo ? `
+                    <div class="mb-4">
+                        <p class="text-xs font-bold text-gray-600 uppercase mb-2">ATTACHED PHOTO EVIDENCE</p>
+                        <img src="${c.photo}" alt="Fake Complaint Photo" class="h-40 w-auto rounded-md border-2 border-red-300 shadow-md cursor-pointer hover:opacity-90 transition" onclick="window.open(this.src)" title="Click to View Full Size">
+                    </div>` : ''}
+                   
+                    <div class="p-3 bg-red-100 rounded border border-red-300">
+                        <p class="text-xs font-bold text-red-700">STATUS UPDATE:</p>
+                        <p class="text-sm text-red-800 mt-1">${c.notes}</p>
+                    </div>
+                </div>
+                `).join('');
+
+                if (data.length === 0) {
+                    list.innerHTML = '<div class="text-center p-8 bg-green-50 rounded border-2 border-green-300"><p class="text-green-700 font-bold text-lg"><i class="fas fa-check-circle mr-2"></i>No Fake Complaint Reports</p><p class="text-green-600 text-sm mt-2">All complaints have been verified as genuine</p></div>';
+                }
+                return;
+            }
+
+            // Regular department view with category filtering
+            let filteredData = [];
+            const allDeptData = getData().filter(c => c.department === selectedDept && !c.isFakeReport);
+
+            if (currentDeptCategory === 'forwarded') {
+                filteredData = allDeptData.filter(c => c.status === 'Forwarded');
+            } else if (currentDeptCategory === 'in-progress') {
+                filteredData = allDeptData.filter(c => c.status === 'In Progress');
+            } else if (currentDeptCategory === 'resolved') {
+                filteredData = allDeptData.filter(c => c.status === 'Resolved');
+            }
+
+            filteredData.sort((a, b) => b.id - a.id);
+
+            if (filteredData.length === 0) {
+                list.innerHTML = `<p class="text-center text-gray-500 py-8"><i class="fas fa-inbox mr-2"></i>No ${currentDeptCategory.replace('-', ' ')} tasks for this department.</p>`;
+                return;
+            }
+
+            list.innerHTML = filteredData.map(c => `
+            <div class="border rounded-lg p-4 ${currentDeptCategory === 'resolved' ? 'bg-green-50 border-green-300' : currentDeptCategory === 'in-progress' ? 'bg-yellow-50 border-yellow-300' : 'border-gray-300'}">
+                    <div class="flex justify-between mb-2">
+                        <h3 class="font-bold">${c.type} <span class="text-xs font-normal text-gray-500">(${c.loc})</span></h3>
+                        <span class="text-xs bg-gray-100 px-2 py-1 rounded">${c.status}</span>
+                    </div>
+                    <div class="mb-2 p-2 bg-blue-50 rounded border border-blue-100 italic">
+                        <p class="text-xs font-bold text-blue-800"><i class="fas fa-user"></i> Reporter: ${c.name} | <i class="fas fa-phone"></i> ${c.phoneNumber}</p>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">${c.desc}</p>
+
+                    ${c.photo ? `
+                    <div class="mb-3">
+                        <p class="text-xs font-bold text-gray-600 mb-1">Attached Photo:</p>
+                        <img src="${c.photo}" alt="Complaint Photo" class="h-32 w-auto rounded-md border shadow-sm cursor-pointer hover:opacity-90 transition" onclick="window.open(this.src)" title="Click to View Full Size">
+                    </div>
+                    ` : ''}
+
+                    ${c.coordinates ? `
+                    <div class="mb-4 bg-white p-3 rounded border border-gray-200 shadow-sm">
+                        <p class="text-xs font-bold text-blue-600 uppercase mb-2">📍 WORK LOCATION PREVIEW</p>
+                        <div class="rounded overflow-hidden border border-blue-50 shadow-sm mb-2" style="height: 180px;">
+                            <iframe width="100%" height="100%" style="border:0;" loading="lazy" 
+                                src="https://maps.google.com/maps?q=${c.coordinates.trim()}&z=15&output=embed">
+                            </iframe>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-gray-400 font-mono">${c.coordinates}</span>
+                            <a href="https://www.google.com/maps?q=${c.coordinates}" target="_blank" class="text-xs text-blue-600 hover:text-blue-800 font-bold">
+                                 <i class="fas fa-external-link-alt mr-1"></i> Open in Maps Navigation ↗
+                            </a>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700">Update Status & Time</label>
+                            <input type="text" id="status-update-${c.id}" class="w-full border p-1 text-sm rounded" placeholder="e.g. Work started, completing in 2 days">
+                        </div>
+                        <div class="flex items-end gap-2">
+                             <div class="flex-grow">
+                                <label class="block text-xs font-bold text-gray-700">Resolution Proof</label>
+                                <div class="flex gap-2">
+                                    <input type="hidden" id="proof-data-${c.id}">
+                                    <button type="button" onclick="startDeptCameraCapture(${c.id})" class="bg-blue-500 text-white px-2 py-1 rounded text-xs h-8 flex items-center gap-1">
+                                        <i class="fas fa-camera"></i>Camera
+                                    </button>
+                                </div>
+                                <div id="camera-preview-${c.id}" class="hidden mt-2">
+                                    <video id="video-${c.id}" width="100%" height="auto" class="rounded border mb-2"></video>
+                                    <div class="flex gap-2">
+                                        <button type="button" onclick="captureDeptPhoto(${c.id})" class="flex-1 bg-green-600 text-white px-2 py-1 rounded text-xs">Capture</button>
+                                        <button type="button" onclick="stopDeptCameraCapture(${c.id})" class="flex-1 bg-red-600 text-white px-2 py-1 rounded text-xs">Cancel</button>
+                                    </div>
+                                </div>
+                             </div>
+                             <button onclick="updateProgress(${c.id})" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm h-8">Update Status</button>
+                             <button onclick="markInProgress(${c.id})" class="bg-blue-600 text-white px-3 py-1 rounded text-sm h-8">In Progress</button>
+                             <button onclick="resolveIssue(${c.id})" class="bg-green-600 text-white px-3 py-1 rounded text-sm h-8">Resolved</button>
+                             <button onclick="markFakeFromDept(${c.id})" class="bg-red-600 text-white px-3 py-1 rounded text-sm h-8">Mark as Fake</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        window.updateProgress = function (id) {
+            const note = document.getElementById(`status-update-${id}`).value;
+            if (!note) return alert('Enter a status note');
+
+            const data = getData();
+            const item = data.find(c => c.id === id);
+            item.status = 'In Progress';
+            item.notes = note;
+            saveData(data);
+            renderDeptView();
+            alert('Progress updated');
+        };
+
+        window.markInProgress = function (id) {
+            const data = getData();
+            const item = data.find(c => c.id === id);
+            const noteEl = document.getElementById(`status-update-${id}`);
+            const note = noteEl ? noteEl.value : '';
+
+            item.status = 'In Progress';
+            if (note) item.notes = note;
+            saveData(data);
+
+            // Switch to In Progress tab so user sees the filtered view
+            currentDeptCategory = 'in-progress';
+            renderDeptView();
+            alert('Complaint marked In Progress');
+        };
+
+
+
+        window.resolveIssue = function (id) {
+            const proofDataEl = document.getElementById(`proof-data-${id}`);
+            const dataURL = proofDataEl ? proofDataEl.value : null;
+
+            if (!dataURL) return alert('Proof Photo is MANDATORY to resolve.');
+
+            const data = getData();
+            const item = data.find(c => c.id === id);
+            item.status = 'Resolved';
+            item.notes = 'Work Completed. Resolution proof uploaded.';
+            item.resolutionPhoto = dataURL; // Store Base64 string
+            saveData(data);
+
+            renderDeptView();
+            alert('Issue Resolved! Proof uploaded.');
+        };
+
+        window.startDeptCameraCapture = function (id) {
+            const previewDiv = document.getElementById(`camera-preview-${id}`);
+            const video = document.getElementById(`video-${id}`);
+
+            previewDiv.classList.remove('hidden');
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.play();
+                    video.dataset.stream = stream;
+                })
+                .catch(err => {
+                    alert('Camera access denied or not available. Please use file upload instead.');
+                    previewDiv.classList.add('hidden');
+                });
+        };
+
+        window.captureDeptPhoto = async function (id) {
+            const video = document.getElementById(`video-${id}`);
+
+            // Capture location
+            let coords = "Location not available";
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+                });
+                coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+            } catch (err) {
+                console.warn("Location error:", err);
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            // Overlay Metadata
+            const now = new Date();
+            ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+            ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 14px Arial";
+            ctx.fillText("✅ RESOLUTION PROOF", 10, canvas.height - 35);
+            ctx.font = "12px Arial";
+            ctx.fillText(`📍 ${coords} | 🕒 ${now.toLocaleString()}`, 10, canvas.height - 15);
+
+            // Convert canvas to data URL and store in hidden input
+            try {
+                const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+                const hidden = document.getElementById(`proof-data-${id}`);
+                if (hidden) hidden.value = dataURL;
+
+                // Hide camera preview
+                stopDeptCameraCapture(id);
+                alert(`Photo Captured at ${coords}! Click Resolved button to upload.`);
+            } catch (err) {
+                alert('Failed to capture photo. Please try again.');
+                stopDeptCameraCapture(id);
+            }
+        };
+
+        window.stopDeptCameraCapture = function (id) {
+            const video = document.getElementById(`video-${id}`);
+            const previewDiv = document.getElementById(`camera-preview-${id}`);
+
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            previewDiv.classList.add('hidden');
+        };
+
+        // --- Geolocation Logic ---
+        function getLiveLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        document.getElementById('c-coords').value = `${lat},${lng} `;
+
+                        // Optional: Reverse Geocoding could go here to get address string
+                        // For now, just append coordinates to visual input or keep distinct
+                        const locInput = document.getElementById('c-loc');
+                        if (!locInput.value) {
+                            locInput.value = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)} `;
+                        } else {
+                            locInput.value += ` (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})`;
+                        }
+                        alert('Location captured successfully!');
+                    },
+                    (error) => {
+                        alert('Error getting location: ' + error.message);
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        // --- Police Logic ---
+        function initPolice() {
+            renderPoliceView();
+        }
+
+        function renderPoliceView() {
+            const list = document.getElementById('police-tasks-list');
+            const data = getData().filter(c => c.isFakeReport);
+
+            if (!data.length) {
+                list.innerHTML = `<div class="text-gray-600">No fake reports currently assigned.</div>`;
+                return;
+            }
+
+            list.innerHTML = data.map(c => `
+                <div class="border-2 border-red-500 rounded-lg p-6 bg-red-50">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg text-red-800">FAKE COMPLAINT REPORT</h3>
+                            <p class="text-sm text-red-600 font-semibold mt-1">${c.date || ''}</p>
+                        </div>
+                        <span class="text-xs bg-red-600 text-white px-3 py-1 rounded-full font-bold">FLAGGED</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4 p-4 bg-white rounded border border-red-200">
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">COMPLAINANT NAME</p>
+                            <p class="text-lg font-bold text-red-800">${c.name || 'Not Available'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">PHONE</p>
+                            <p class="text-lg font-bold text-red-800">${c.phoneNumber || 'Not Available'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">PINCODE</p>
+                            <p class="text-lg font-bold">${c.pincode || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 uppercase">DISTRICT</p>
+                            <p class="text-lg font-bold">${c.district || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="mb-4 p-3 bg-white rounded border border-red-200">
+                        <p class="text-xs font-bold text-gray-600 uppercase">COMPLAINT TYPE</p>
+                        <p class="font-bold text-red-700">${c.type}</p>
+                    </div>
+                    <div class="mb-4 p-3 bg-white rounded border border-red-200">
+                        <p class="text-xs font-bold text-gray-600 uppercase">DESCRIPTION</p>
+                        <p class="text-sm text-gray-700">${c.description || c.desc || ''}</p>
+                    </div>
+                    
+                    ${c.coordinates ? `
+                        <div class="mb-4 p-3 bg-white rounded border border-red-200">
+                            <p class="text-xs font-bold text-red-600 uppercase mb-2">📍 LIVE GOOGLE MAP LOCATION</p>
+                            <div class="rounded overflow-hidden border border-red-100 shadow-sm mb-2" style="height: 200px;">
+                                <iframe width="100%" height="100%" style="border:0;" loading="lazy" 
+                                    src="https://maps.google.com/maps?q=${c.coordinates.trim()}&z=15&output=embed">
+                                </iframe>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] text-gray-400 font-mono">${c.coordinates}</span>
+                                <a href="https://www.google.com/maps?q=${c.coordinates}" target="_blank" 
+                                   class="text-xs text-blue-600 hover:underline font-bold">
+                                    <i class="fas fa-directions"></i> Open in Maps Navigation ↗
+                                </a>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+
+        // --- Camera Logic (Enhanced) ---
+        let stream = null;
+        let capturedPhotoData = null;
+        let cameraActive = false;
+        let currentFacingMode = 'environment'; // 'user' for front, 'environment' for rear
+        let gridEnabled = false;
+
+        function updateStatusMessage(message, isError = false) {
+            const statusEl = document.getElementById('status-text');
+            const errorEl = document.getElementById('camera-error');
+            const errorText = document.getElementById('error-text');
+
+            if (isError) {
+                statusEl.textContent = message;
+                errorEl.classList.remove('hidden');
+                errorText.textContent = message;
+            } else {
+                statusEl.textContent = message;
+                errorEl.classList.add('hidden');
+            }
+        }
+
+        function startCamera() {
+            const video = document.getElementById('camera-feed');
+            const noAccessDiv = document.getElementById('camera-no-access');
+
+            // Check browser support
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                updateStatusMessage('Camera API not supported in this browser', true);
+                alert('Your browser does not support camera access');
+                return;
+            }
+
+            // Show loading state
+            updateStatusMessage('Requesting camera access...');
+
+            // Request camera with specified facing mode
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: currentFacingMode,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            })
+                .then(function (s) {
+                    stream = s;
+                    video.srcObject = stream;
+
+                    // Ensure video plays
+                    const playPromise = video.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.error('Video play failed:', error);
+                            updateStatusMessage('Failed to start video stream', true);
+                        });
+                    }
+
+                    // UI Updates
+                    cameraActive = true;
+                    video.classList.remove('hidden');
+                    noAccessDiv.classList.add('hidden');
+                    document.getElementById('captured-image').classList.add('hidden');
+                    document.getElementById('btn-start-camera').classList.add('hidden');
+                    document.getElementById('btn-stop-camera').classList.remove('hidden');
+                    document.getElementById('btn-capture').classList.remove('hidden');
+                    document.getElementById('btn-grid').classList.remove('hidden');
+                    document.getElementById('btn-flip-camera').classList.remove('hidden');
+                    document.getElementById('btn-retake').classList.add('hidden');
+                    document.getElementById('btn-accept').classList.add('hidden');
+                    document.getElementById('camera-status-badge').classList.remove('hidden');
+
+                    updateStatusMessage('📹 Camera active - Point at the issue');
+                })
+                .catch(function (err) {
+                    console.error("Camera Error:", err);
+                    cameraActive = false;
+
+                    let errorMsg = 'Error accessing camera';
+                    if (err.name === 'NotAllowedError') {
+                        errorMsg = 'Camera permission denied. Please allow camera access.';
+                    } else if (err.name === 'NotFoundError') {
+                        errorMsg = 'No camera device found on this device.';
+                    } else if (err.name === 'NotReadableError') {
+                        errorMsg = 'Camera is in use by another application.';
+                    }
+
+                    updateStatusMessage(errorMsg, true);
+                    document.getElementById('camera-no-access').classList.remove('hidden');
+                });
+        }
+
+        function stopCameraFeed() {
+            stopCamera();
+            cameraActive = false;
+
+            const video = document.getElementById('camera-feed');
+            const noAccessDiv = document.getElementById('camera-no-access');
+
+            video.classList.add('hidden');
+            noAccessDiv.classList.remove('hidden');
+            document.getElementById('btn-start-camera').classList.remove('hidden');
+            document.getElementById('btn-stop-camera').classList.add('hidden');
+            document.getElementById('btn-capture').classList.add('hidden');
+            document.getElementById('btn-grid').classList.add('hidden');
+            document.getElementById('btn-flip-camera').classList.add('hidden');
+            document.getElementById('camera-status-badge').classList.add('hidden');
+            gridEnabled = false;
+            document.getElementById('camera-grid').classList.add('hidden');
+
+            updateStatusMessage('Camera stopped. Click Start to resume.');
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                });
+                stream = null;
+            }
+        }
+
+        function switchCamera() {
+            // Toggle between front and rear cameras
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            stopCamera();
+
+            // Small delay before restarting
+            setTimeout(() => {
+                startCamera();
+            }, 300);
+        }
+
+        function toggleGridOverlay() {
+            const grid = document.getElementById('camera-grid');
+            gridEnabled = !gridEnabled;
+
+            if (gridEnabled) {
+                grid.classList.remove('hidden');
+                document.getElementById('btn-grid').classList.add('bg-blue-600', 'hover:bg-blue-700');
+                document.getElementById('btn-grid').classList.remove('bg-gray-600', 'hover:bg-gray-700');
+            } else {
+                grid.classList.add('hidden');
+                document.getElementById('btn-grid').classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                document.getElementById('btn-grid').classList.add('bg-gray-600', 'hover:bg-gray-700');
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('camera-feed');
+            const canvas = document.getElementById('camera-canvas');
+            const img = document.getElementById('captured-image');
+
+            if (!stream || !cameraActive) {
+                updateStatusMessage('Camera not active', true);
+                return;
+            }
+
+            try {
+                // Set canvas dimensions to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Overlay Metadata
+                const now = new Date();
+                const dateTimeStr = now.toLocaleString();
+                const locationText = document.getElementById('c-loc').value || "Location: Not specified";
+                const coordsText = document.getElementById('c-coords').value || "";
+
+                // Dark background for text
+                ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+                ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
+
+                // Text styling
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "bold 18px Arial, sans-serif";
+                ctx.fillText("📍 " + dateTimeStr, 15, canvas.height - 55);
+
+                ctx.font = "14px Arial, sans-serif";
+                ctx.fillText("Location: " + locationText.substring(0, 45), 15, canvas.height - 35);
+
+                if (coordsText) {
+                    ctx.font = "12px Arial, sans-serif";
+                    ctx.fillStyle = "#90EE90";
+                    ctx.fillText("Coords: " + coordsText, 15, canvas.height - 15);
+                }
+
+                // Convert to data URL
+                capturedPhotoData = canvas.toDataURL('image/jpeg', 0.95);
+                img.src = capturedPhotoData;
+
+                // UI Updates
+                stopCamera();
+                cameraActive = false;
+                video.classList.add('hidden');
+                img.classList.remove('hidden');
+                document.getElementById('camera-grid').classList.add('hidden');
+                document.getElementById('btn-start-camera').classList.add('hidden');
+                document.getElementById('btn-stop-camera').classList.add('hidden');
+                document.getElementById('btn-capture').classList.add('hidden');
+                document.getElementById('btn-grid').classList.add('hidden');
+                document.getElementById('btn-flip-camera').classList.add('hidden');
+                document.getElementById('btn-retake').classList.remove('hidden');
+                document.getElementById('btn-accept').classList.remove('hidden');
+                document.getElementById('camera-status-badge').classList.add('hidden');
+
+                updateStatusMessage('✅ Photo captured. Review and accept or retake.');
+            } catch (error) {
+                console.error('Capture error:', error);
+                updateStatusMessage('Failed to capture photo: ' + error.message, true);
+            }
+        }
+
+        function retakePhoto() {
+            capturedPhotoData = null;
+            document.getElementById('captured-image').classList.add('hidden');
+            document.getElementById('btn-retake').classList.add('hidden');
+            document.getElementById('btn-accept').classList.add('hidden');
+            startCamera();
+        }
+
+        function acceptPhoto() {
+            if (!capturedPhotoData) {
+                updateStatusMessage('No photo to accept', true);
+                return;
+            }
+
+            // Photo is already stored in capturedPhotoData
+            // It will be included when the form is submitted
+            document.getElementById('camera-container').innerHTML = `
+                <div class="bg-green-50 border-2 border-green-500 rounded-lg p-4 text-center">
+                    <i class="fas fa-check-circle text-4xl text-green-600 mb-2"></i>
+                    <p class="text-green-800 font-bold">Photo attached successfully!</p>
+                    <p class="text-sm text-green-700 mt-1">Your complaint will include this evidence photo.</p>
+                </div>
+            `;
+            updateStatusMessage('📸 Photo attached to complaint');
+        }
+
+        function resetCameraUI() {
+            stopCamera();
+            cameraActive = false;
+            capturedPhotoData = null;
+            gridEnabled = false;
+
+            const video = document.getElementById('camera-feed');
+            const noAccessDiv = document.getElementById('camera-no-access');
+            const img = document.getElementById('captured-image');
+
+            video.classList.add('hidden');
+            img.classList.add('hidden');
+            noAccessDiv.classList.remove('hidden');
+            document.getElementById('btn-start-camera').classList.remove('hidden');
+            document.getElementById('btn-stop-camera').classList.add('hidden');
+            document.getElementById('btn-capture').classList.add('hidden');
+            document.getElementById('btn-retake').classList.add('hidden');
+            document.getElementById('btn-accept').classList.add('hidden');
+            document.getElementById('btn-grid').classList.add('hidden');
+            document.getElementById('btn-flip-camera').classList.add('hidden');
+            document.getElementById('camera-status-badge').classList.add('hidden');
+            document.getElementById('camera-grid').classList.add('hidden');
+            document.getElementById('camera-error').classList.add('hidden');
+
+            updateStatusMessage('Camera ready. Click Start to begin.');
+        }
+
+        // Add event listener to language selector in home page
+        document.addEventListener('DOMContentLoaded', function () {
+            const homeSelector = document.getElementById('home-language-selector');
+            if (homeSelector) {
+                // Set initial value from saved language
+                const savedLang = getSavedLanguage();
+                homeSelector.value = savedLang;
+
+                homeSelector.addEventListener('change', function (e) {
+                    currentLanguage = e.target.value;
+                    setLanguage(e.target.value);
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

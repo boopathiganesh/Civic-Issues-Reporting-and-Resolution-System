@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Civic Issues Reporting and Resolution System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="font-sans text-gray-800" style="background-color: #f3f4f6;">
+    <!-- Header -->
+    <header class="bg-white shadow z-10">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <h1 class="text-xl font-bold text-gray-800" id="header-title">Dashboard</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <select id="language-selector" onchange="setLanguage(this.value)"
+                    class="px-2 py-1 border border-gray-300 rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="en">English</option>
+                    <option value="ta">Tamil (தமிழ்)</option>
+                    <option value="hi">Hindi (हिंदी)</option>
+                </select>
+                <span id="user-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100">{{ role }}</span>
+                <a href="/logout" id="logout-btn" class="text-red-500 hover:text-red-700 text-sm font-medium">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Citizen View -->
+        {% if role == 'citizen' %}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Report Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow p-6">
+                    <h2 class="text-lg font-bold mb-4" id="report-title">Report New Issue</h2>
+                    <form id="citizen-form">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700" id="label-name">Reporter Name</label>
+                            <input type="text" id="c-name"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2"
+                                placeholder="Your Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700" id="label-phone">Mobile
+                                Number</label>
+                            <input type="tel" id="c-phone" value="{{ phone or '' }}"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2 bg-gray-50 cursor-not-allowed"
+                                placeholder="Your Phone Number" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700" id="label-type">Problem Type</label>
+                            <select id="c-type"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2" required>
+                                <option value="" id="opt-type-default">-- Select Problem Type --</option>
+                                <option value="Roads" id="opt-type-roads">Damaged Roads</option>
+                                <option value="Water" id="opt-type-water">Water Leakage</option>
+                                <option value="Garbage" id="opt-type-garbage">Garbage Piling</option>
+                                <option value="Drainage" id="opt-type-drainage">Drainage Cleaning</option>
+                                <option value="Streetlight" id="opt-type-streetlight">Streetlight Issue</option>
+                                <option value="Other" id="opt-type-other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700" id="label-district">District</label>
+                            <select id="c-district"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2" required>
+                                <option value="" id="opt-dist-default">Select District...</option>
+                                {% for district in districts %}
+                                <option value="{{ district }}">{{ district }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700" id="label-pincode">Pincode</label>
+                            <input type="number" id="c-pincode"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2"
+                                placeholder="6-digit Pincode" required min="100000" max="999999">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700" id="label-desc">Description</label>
+                            <textarea id="c-desc" rows="3"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2"
+                                placeholder="Describe the issue..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700" id="label-location">Location</label>
+                            <div class="flex gap-2 mt-1 items-stretch">
+                                <input type="text" id="c-loc"
+                                    class="block w-full border-gray-300 rounded-md shadow-sm border p-2 flex-1"
+                                    placeholder="Area / Street Details" required>
+                                <button type="button" onclick="captureLocation()"
+                                    class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 rounded text-xs flex items-center justify-center gap-1"
+                                    title="Capture Live Location">
+                                    <i class="fas fa-map-marker-alt"></i> GPS
+                                </button>
+                            </div>
+                            <div id="location-info" class="text-xs text-gray-600 mt-1"></div>
+                            <input type="hidden" id="c-coords">
+                        </div>
+
+                        <!-- Live Camera Capture -->
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2" id="label-camera">Live Evidence
+                                Photo</label>
+                            <div id="camera-container" class="bg-gray-900 rounded-lg overflow-hidden mb-2">
+                                <video id="liveCamera" width="100%" height="300" style="display:block;" autoplay
+                                    playsinline></video>
+                            </div>
+                            <div class="flex gap-2 mb-2 items-stretch">
+                                <button type="button" onclick="startCamera()" id="btn-start-camera"
+                                    class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-2 rounded text-xs flex flex-col items-center justify-center text-center gap-1 min-h-[80px]">
+                                    <i class="fas fa-video text-lg"></i> <span>Start Camera</span>
+                                </button>
+                                <button type="button" onclick="capturePhoto()" id="btn-capture"
+                                    class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-2 rounded text-xs flex flex-col items-center justify-center text-center gap-1 min-h-[80px]">
+                                    <i class="fas fa-camera text-lg"></i> <span>Capture Photo</span>
+                                </button>
+                                <button type="button" onclick="stopCamera()" id="btn-stop-camera"
+                                    class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-2 rounded text-xs flex flex-col items-center justify-center text-center gap-1 min-h-[80px]">
+                                    <i class="fas fa-stop text-lg"></i> <span>Stop Camera</span>
+                                </button>
+                            </div>
+                            <!-- Photo Preview -->
+                            <div id="photo-preview-container" class="hidden mb-2">
+                                <div class="bg-gray-50 rounded-lg p-3 mb-2">
+                                    <p class="text-xs font-bold text-green-600 mb-2">📷 Photo Captured With Location
+                                        Data</p>
+                                    <img id="photo-preview" src="" alt="Captured Photo" class="w-full rounded-lg mb-2">
+                                    <div id="photo-location-info" class="text-xs text-gray-700 bg-blue-50 p-2 rounded">
+                                        <p><strong>📍 Location:</strong></p>
+                                        <p id="photo-location-display">Capturing location...</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="clearPhoto()"
+                                    class="w-full mt-2 bg-gray-400 hover:bg-gray-500 text-white font-bold py-1 px-3 rounded text-xs">
+                                    Clear Photo & Location
+                                </button>
+                            </div>
+                            <input type="hidden" id="c-photo">
+                        </div>
+
+                        <button type="submit" id="btn-submit"
+                            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-bold">
+                            <i class="fas fa-send"></i> Submit Complaint
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Complaints List -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow p-6">
+                    <h2 class="text-lg font-bold mb-4" id="my-complaints-title">My Complaints</h2>
+                    <div id="complaints-list" class="space-y-4">
+                        <p class="text-gray-500">Loading complaints...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Municipal Officer View -->
+        {% if role == 'municipal' %}
+        <div class="bg-white rounded-xl shadow p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b pb-4">
+                <h2 class="text-xl font-bold text-blue-900" id="municipal-title">📋 Complaint Management</h2>
+
+                <!-- Tab Navigation -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="setActiveTab('submitted')" id="tab-submitted"
+                        class="tab-btn active px-4 py-2 rounded-lg text-sm font-bold transition-all bg-yellow-100 text-yellow-800">
+                        <span id="lbl-tab-submitted">Submitted</span> <span
+                            class="ml-1 bg-yellow-800 text-white px-2 py-0.5 rounded-full text-xs"
+                            id="count-submitted">0</span>
+                    </button>
+                    <button onclick="setActiveTab('assigned')" id="tab-assigned"
+                        class="tab-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-gray-100 text-gray-600">
+                        <span id="lbl-tab-assigned">Forwarded</span> <span
+                            class="ml-1 bg-gray-600 text-white px-2 py-0.5 rounded-full text-xs"
+                            id="count-assigned">0</span>
+                    </button>
+                    <button onclick="setActiveTab('in_progress')" id="tab-in_progress"
+                        class="tab-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-gray-100 text-gray-600">
+                        <span id="lbl-tab-inprogress">In Progress</span> <span
+                            class="ml-1 bg-gray-600 text-white px-2 py-0.5 rounded-full text-xs"
+                            id="count-in_progress">0</span>
+                    </button>
+                    <button onclick="setActiveTab('resolved')" id="tab-resolved"
+                        class="tab-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-gray-100 text-gray-600">
+                        <span id="lbl-tab-resolved">Resolved</span> <span
+                            class="ml-1 bg-gray-600 text-white px-2 py-0.5 rounded-full text-xs"
+                            id="count-resolved">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="complaints-list" class="space-y-4">
+                <p class="text-gray-500">Loading complaints...</p>
+            </div>
+        </div>
+
+        <style>
+            .tab-btn.active.bg-yellow-100 {
+                background-color: #fef3c7;
+                color: #92400e;
+                border: 2px solid #92400e;
+            }
+
+            .tab-btn.active.bg-blue-100 {
+                background-color: #dbeafe;
+                color: #1e40af;
+                border: 2px solid #1e40af;
+            }
+
+            .tab-btn.active.bg-purple-100 {
+                background-color: #f3e8ff;
+                color: #6b21a8;
+                border: 2px solid #6b21a8;
+            }
+
+            .tab-btn.active.bg-green-100 {
+                background-color: #dcfce7;
+                color: #166534;
+                border: 2px solid #166534;
+            }
+        </style>
+
+        {% endif %}
+
+        <!-- Department Official View -->
+        {% if role == 'dept' %}
+        <div class="bg-white rounded-xl shadow p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b pb-4">
+                <h2 class="text-xl font-bold text-green-900" id="dept-title">🛠️ Department Workflow</h2>
+
+                <!-- Tab Navigation (shared logic with Municipal) -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="setActiveTab('assigned')" id="tab-assigned"
+                        class="tab-btn active px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-100 text-blue-800">
+                        Forwarded <span class="ml-1 bg-blue-800 text-white px-2 py-0.5 rounded-full text-xs"
+                            id="count-assigned">0</span>
+                    </button>
+                    <button onclick="setActiveTab('in_progress')" id="tab-in_progress"
+                        class="tab-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-gray-100 text-gray-600">
+                        In Progress <span class="ml-1 bg-gray-600 text-white px-2 py-0.5 rounded-full text-xs"
+                            id="count-in_progress">0</span>
+                    </button>
+                    <button onclick="setActiveTab('resolved')" id="tab-resolved"
+                        class="tab-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-gray-100 text-gray-600">
+                        Resolved <span class="ml-1 bg-gray-600 text-white px-2 py-0.5 rounded-full text-xs"
+                            id="count-resolved">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="complaints-list" class="space-y-4">
+                <p class="text-gray-500">Loading complaints...</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Police Officer View -->
+        {% if role == 'police' %}
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-bold mb-4" id="police-title">Fake Complaints Under Investigation</h2>
+            <div id="complaints-list" class="space-y-4">
+                <p class="text-gray-500">Loading complaints...</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Universal Detail Modal (Accessible to all roles) -->
+        <div id="complaint-detail-modal" class="fixed inset-0 z-50 hidden"
+            style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-screen overflow-y-auto"
+                    style="max-height: 90vh;">
+                    <!-- Modal Header -->
+                    <div
+                        class="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center z-10">
+                        <div>
+                            <h3 class="text-lg font-bold" id="modal-complaint-id">Complaint Details</h3>
+                            <p class="text-xs opacity-80" id="modal-date">--</p>
+                        </div>
+                        <button onclick="closeDetailModal()"
+                            class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="p-6">
+                        <!-- Reporter Info -->
+                        <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-blue-800 mb-2" id="modal-reporter-info">👤 Reporter
+                                Information</h4>
+                            <p class="text-sm text-gray-700"><strong id="modal-label-name">Name:</strong> <span
+                                    id="modal-reporter-name">--</span></p>
+                            <p class="text-sm text-gray-700"><strong id="modal-label-phone">Phone:</strong> <span
+                                    id="modal-reporter-phone">--</span></p>
+                            <p class="text-sm text-gray-700"><strong id="modal-label-status">Status:</strong> <span
+                                    id="modal-status" class="px-2 py-0.5 rounded-full text-xs font-bold">--</span></p>
+                        </div>
+
+                        <!-- Complaint Info -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2" id="modal-complaint-info">📝 Complaint
+                                Details</h4>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div><strong id="modal-label-type">Type:</strong> <span id="modal-type">--</span></div>
+                                <div><strong id="modal-label-dist">District:</strong> <span
+                                        id="modal-district">--</span></div>
+                                <div><strong id="modal-label-pin">Pincode:</strong> <span id="modal-pincode">--</span>
+                                </div>
+                                <div><strong id="modal-label-loc">Location:</strong> <span id="modal-location">--</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 border-t pt-3">
+                                <strong class="text-sm text-gray-700" id="modal-label-desc">Description:</strong>
+                                <p class="text-sm text-gray-600 mt-1 bg-white p-3 rounded-lg border border-gray-200"
+                                    id="modal-description">--</p>
+                            </div>
+                            <div id="modal-resolution-section" class="mt-3 border-t pt-3 hidden">
+                                <strong class="text-sm text-green-800" id="modal-label-notes">✅ Resolution Notes from
+                                    Department:</strong>
+                                <p class="text-sm text-gray-700 mt-1 bg-green-50 p-3 rounded-lg border border-green-200 italic"
+                                    id="modal-resolution-notes">--</p>
+                            </div>
+                        </div>
+
+                        <!-- Location & Google Map View -->
+                        <div class="bg-green-50 rounded-lg p-4 mb-4" id="modal-coords-section">
+                            <h4 class="text-sm font-bold text-green-800 mb-2" id="modal-map-title">📍 GPS Coordinates &
+                                Live Map</h4>
+                            <p class="text-sm text-gray-700 font-mono mb-3" id="modal-coordinates">--</p>
+                            <!-- Live Google Map -->
+                            <div class="rounded-lg overflow-hidden border-2 border-green-300 shadow-sm"
+                                style="height: 300px;">
+                                <iframe id="modal-google-map" width="100%" height="100%" style="border:0;"
+                                    allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                                    src="">
+                                </iframe>
+                            </div>
+                            <div class="mt-2 flex justify-between items-center">
+                                <p class="text-xs text-gray-500">🗺️ Live Google Map View of complaint location</p>
+                                <a id="modal-map-link" href="#" target="_blank"
+                                    class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                    Open in Google Maps ↗
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Live Captured Photo -->
+                        <div class="bg-yellow-50 rounded-lg p-4 mb-4" id="modal-photo-section">
+                            <h4 class="text-sm font-bold text-yellow-800 mb-2" id="modal-photo-title">📷 Citizen Live
+                                Captured Photo (Evidence)
+                            </h4>
+                            <div class="bg-black rounded-lg overflow-hidden" style="max-height: 400px;">
+                                <img id="modal-photo" src="" alt="Captured Evidence Photo" class="w-full object-contain"
+                                    style="max-height: 400px; cursor: zoom-in;" onclick="openFullPhoto(this.src)">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 text-center">📸 Click photo to view full size</p>
+                        </div>
+
+                        <!-- Resolution Photo (From Department) -->
+                        <div class="bg-blue-50 rounded-lg p-4 mb-4 hidden" id="modal-resolved-photo-section">
+                            <h4 class="text-sm font-bold text-blue-800 mb-2">✅ Department Resolution Photo (Proof of
+                                Work)</h4>
+                            <div class="bg-black rounded-lg overflow-hidden" style="max-height: 400px;">
+                                <img id="modal-resolved-photo" src="" alt="Resolution Proof Photo"
+                                    class="w-full object-contain" style="max-height: 400px; cursor: zoom-in;"
+                                    onclick="openFullPhoto(this.src)">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 text-center">📸 Proof of completion uploaded by
+                                official</p>
+
+                            <!-- Resolution Location Display -->
+                            <div id="modal-res-coords-section" class="mt-4 pt-3 border-t border-blue-200 hidden">
+                                <h5 class="text-xs font-bold text-blue-700 uppercase mb-1">📍 Resolution Location (Live
+                                    Capture)</h5>
+                                <p class="text-sm text-blue-900 font-mono" id="modal-resolved-coordinates">--</p>
+                            </div>
+                        </div>
+
+                        <!-- Forward Action -->
+                        <div class="bg-purple-50 rounded-lg p-4" id="modal-action-section">
+                            <h4 class="text-sm font-bold text-purple-800 mb-2" id="modal-action-title">⚡ Take Action
+                            </h4>
+                            <div class="flex gap-2 items-center flex-wrap">
+                                <select id="modal-dept-select"
+                                    class="border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 flex-1">
+                                    <option value="" id="opt-dept-default">-- Select Department to Forward --</option>
+                                    <option value="Municipal Corporation">🏛️ Municipal Corporation</option>
+                                    <option value="Electrical Board">⚡ Electrical Board</option>
+                                    <option value="Fire Station">🚒 Fire Station</option>
+                                </select>
+                                <button onclick="forwardFromModal()" id="btn-forward-modal"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded font-semibold whitespace-nowrap">
+                                    ➤ Forward to Dept
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Universal Fullscreen Photo Modal -->
+        <div id="fullscreen-photo-modal" class="fixed inset-0 z-60 hidden"
+            style="background-color: rgba(0,0,0,0.9); z-index: 60;" onclick="closeFullPhoto()">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <button onclick="closeFullPhoto()"
+                    class="absolute top-4 right-4 text-white text-3xl font-bold hover:text-gray-300">&times;</button>
+                <img id="fullscreen-photo-img" src="" alt="Full Size Photo"
+                    class="max-w-full max-h-screen object-contain">
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const role = '{{ role }}';
+        let mediaStream = null;
+        let photoData = null;
+
+        // Language translations
+        const translations = {
+            en: {
+                reportTitle: 'Report New Issue',
+                reporterName: 'Reporter Name',
+                yourName: 'Your Name',
+                mobileNumber: 'Mobile Number',
+                problemType: 'Problem Type',
+                district: 'District',
+                pincode: 'Pincode',
+                description: 'Description',
+                location: 'Location',
+                liveEvidence: 'Live Evidence Photo',
+                startCamera: 'Start Camera',
+                capturePhoto: 'Capture Photo',
+                stopCamera: 'Stop Camera',
+                stopCamera: 'Stop Camera',
+                submitBtn: 'Submit Complaint',
+                myComplaints: 'My Complaints',
+                loading: 'Loading complaints...',
+                pincodePlaceholder: '6-digit Pincode',
+                descPlaceholder: 'Describe the issue...',
+                locPlaceholder: 'Area / Street Details',
+                optTypeDefault: '-- Select Problem Type --',
+                optTypeRoads: 'Damaged Roads',
+                optTypeWater: 'Water Leakage',
+                optTypeGarbage: 'Garbage Piling',
+                optTypeDrainage: 'Drainage Cleaning',
+                optTypeStreetlight: 'Streetlight Issue',
+                optTypeOther: 'Other',
+                optDistDefault: 'Select District...',
+                locationLabel: 'Location',
+                descLabel: 'Desc',
+                notesLabel: 'Notes',
+                reportedLabel: 'Reported',
+                noComplaints: 'No complaints found',
+                forwardedTo: 'Forwarded to',
+                clickForDetails: 'Click to view full details \u2192',
+                headerTitle: 'Dashboard',
+                logout: 'Logout',
+                roleCitizen: 'Citizen',
+                roleMunicipal: 'Municipal Officer',
+                roleDept: 'Dept. Official',
+                rolePolice: 'Police Officer',
+                tabSubmitted: 'Submitted',
+                tabForwarded: 'Forwarded',
+                tabInProgress: 'In Progress',
+                tabResolved: 'Resolved',
+                statusSubmitted: 'Submitted',
+                statusAssigned: 'Forwarded',
+                statusInProgress: 'In Progress',
+                statusResolved: 'Resolved',
+                municipalTitle: '\uD83D\uDCCB Complaint Management',
+                deptTitle: '\uD83D\uDEE0\uFE0F Department Workflow',
+                policeTitle: 'Fake Complaints Under Investigation',
+                labelSubmittedAt: 'Submitted',
+                modalActionTitle: '\u26A1 Take Action',
+                optDeptDefault: '-- Select Department to Forward --',
+                btnForwardModal: '\u27A4 Forward to Dept',
+                labelUpdateState: '\u2699\uFE0F Update State',
+                labelSelectStatus: 'Select Status',
+                btnUpdate: 'Update',
+                btnStartWorking: '\u25B6 Start Working',
+                btnMarkFake: '\uD83D\uDEA9 Mark Fake',
+                labelUpdateNotes: 'Update Progress / Resolution Notes',
+                placeholderWorkDone: 'Describe the work done...',
+                optStatusForwarded: '\uD83D\uDCE5 Forwarded (New)',
+                optStatusInProgress: '\u26A1 In Progress',
+                optStatusResolved: '\u2705 Resolved',
+                modalTitle: 'Complaint Details',
+                reporterInfo: 'Reporter Information',
+                modalName: 'Name',
+                modalPhone: 'Phone',
+                modalStatus: 'Status',
+                complaintInfo: 'Complaint Details',
+                modalType: 'Type',
+                modalDist: 'District',
+                modalPin: 'Pincode',
+                modalLoc: 'Location',
+                modalDesc: 'Description',
+                modalNotes: 'Resolution Notes from Department',
+                mapTitle: 'GPS Coordinates & Live Map',
+                photoTitle: 'Citizen Live Captured Photo (Evidence)'
+            },
+            ta: {
+                reportTitle: 'புதிய சிக்கலைப் புகாரளிக்கவும்',
+                reporterName: 'அறிக்கையாளர் பெயர்',
+                yourName: 'உங்கள் பெயர்',
+                mobileNumber: 'மொபைல் எண்',
+                problemType: 'சிக்கல் வகை',
+                district: 'மாவட்டம்',
+                pincode: 'பின் கோடு',
+                description: 'விளக்கம்',
+                location: 'இடம்',
+                liveEvidence: 'நேரடி ஆதாரப் புகைப்படம்',
+                startCamera: 'கேமராவைத் தொடங்கு',
+                capturePhoto: 'புகைப்படம் எடு',
+                stopCamera: 'கேமராவை நிறுத்து',
+                submitBtn: 'புகாரைச் சமர்ப்பிக்கவும்',
+                myComplaints: 'எனது புகார்கள்',
+                loading: 'புகார்கள் ஏற்றப்படுகின்றன...',
+                pincodePlaceholder: '6 இலக்க பின் கோடு',
+                descPlaceholder: 'சிக்கலை விவரிக்கவும்...',
+                locPlaceholder: 'பகுதி / தெரு விவரங்கள்',
+                optTypeDefault: '-- சிக்கல் வகையைத் தேர்ந்தெடுக்கவும் --',
+                optTypeRoads: 'சேதமடைந்த சாலைகள்',
+                optTypeWater: 'நீர் கசிவு',
+                optTypeGarbage: 'குப்பை குவியல்',
+                optTypeDrainage: 'வடிகால் சோதனை',
+                optTypeStreetlight: 'தெரு விளக்கு சிக்கல்',
+                optTypeOther: 'மற்றவை',
+                optDistDefault: 'மாவட்டத்தைத் தேர்ந்தெடுக்கவும்...',
+                locationLabel: 'இடம்',
+                descLabel: 'விவரம்',
+                notesLabel: 'குறிப்புகள்',
+                reportedLabel: 'புகாரளிக்கப்பட்ட தேதி',
+                noComplaints: 'புகார்கள் எதுவும் இல்லை',
+                forwardedTo: 'இதற்கு அனுப்பப்பட்டது',
+                clickForDetails: 'முழு விவரங்களைக் காண கிளிக் செய்யவும் \u2192',
+                headerTitle: 'முகப்பு',
+                logout: 'வெளியேறு',
+                roleCitizen: 'குடிமகன்',
+                roleMunicipal: 'நகராட்சி அதிகாரி',
+                roleDept: 'துறை அதிகாரி',
+                rolePolice: 'காவல் அதிகாரி',
+                tabSubmitted: 'சமர்ப்பிக்கப்பட்டது',
+                tabForwarded: 'அனுப்பப்பட்டது',
+                tabInProgress: 'செயல்பாட்டில்',
+                tabResolved: 'தீர்வு காணப்பட்டது',
+                statusSubmitted: 'சமர்ப்பிக்கப்பட்டது',
+                statusAssigned: 'அனுப்பப்பட்டது',
+                statusInProgress: 'செயல்பாட்டில்',
+                statusResolved: 'தீர்வு காணப்பட்டது',
+                municipalTitle: '\uD83D\uDCCB புகார் மேலாண்மை',
+                deptTitle: '\uD83D\uDEE0\uFE0F துறை பணிப்பாய்வு',
+                policeTitle: 'விசாரணையில் உள்ள போலி புகார்கள்',
+                labelSubmittedAt: 'சமர்ப்பிக்கப்பட்டது',
+                modalActionTitle: '\u26A1 நடவடிக்கை எடுக்க',
+                optDeptDefault: '-- அனுப்ப வேண்டிய துறையைத் தேர்ந்தெடுக்கவும் --',
+                btnForwardModal: '\u27A4 துறைக்கு அனுப்புக',
+                labelUpdateState: '\u2699\uFE0F நிலையை புதுப்பிக்கவும்',
+                labelSelectStatus: 'நிலையைத் தேர்ந்தெடுக்கவும்',
+                btnUpdate: 'புதுப்பிக்கவும்',
+                btnStartWorking: '\u25B6 வேலையைத் தொடங்கவும்',
+                btnMarkFake: '\uD83D\uDEA9 போலி என்று குறிக்கவும்',
+                labelUpdateNotes: 'முன்னேற்றத்தைப் புதுப்பிக்கவும் / தீர்வு குறிப்புகள்',
+                placeholderWorkDone: 'செய்யப்பட்ட வேலையை விவரிக்கவும்...',
+                optStatusForwarded: '\uD83D\uDCE5 அனுப்பப்பட்டது (\u0BA4\u0BAE\u0BBF\u0BB4\u0BCD)',
+                optStatusInProgress: '\u26A1 \u0B9A\u0BC1\u0BB1\u0BB1\u0BA4\u0BCD\u0BA4\u0BBF\u0BB2\u0BCD \u0B89\u0BB3\u0BCD\u0BB3\u0BA4\u0BC1',
+                optStatusResolved: '\u2705 \u0BA4\u0BC0\u0BB0\u0BCD\u0BB5\u0BC1 \u0B95\u0BBE\u0BA3\u0BAA\u0BCD\u0BA0\u0B9F\u0BCD\u0B9F\u0BA4\u0BC1',
+                modalTitle: 'புகார் விவரங்கள்',
+                reporterInfo: 'அறிக்கையாளர் தகவல்',
+                modalName: 'பெயர்',
+                modalPhone: 'தொலைபேசி',
+                modalStatus: 'நிலை',
+                complaintInfo: 'புகார் விவரங்கள்',
+                modalType: 'வகை',
+                modalDist: 'மாவட்டம்',
+                modalPin: 'பின் கோடு',
+                modalLoc: 'இடம்',
+                modalDesc: 'விளக்கம்',
+                modalNotes: 'துறையிலிருந்து தீர்வு குறிப்புகள்',
+                mapTitle: 'ஜிபிஎஸ் ஒருங்கிணைப்புகள் மற்றும் நேரடி வரைபடம்',
+                photoTitle: 'குடிமகன் நேரலையில் எடுத்த புகைப்படம் (ஆதாரம்)'
+            },
+            hi: {
+                reportTitle: 'नई शिकायत दर्ज करें',
+                reporterName: 'रिपोर्टर का नाम',
+                yourName: 'आपका नाम',
+                mobileNumber: 'मोबाइल नंबर',
+                problemType: 'समस्या का प्रकार',
+                district: 'जिला',
+                pincode: 'पिनकोड',
+                description: 'विवरण',
+                location: 'स्थान',
+                liveEvidence: 'लाइव प्रमाण फोटो',
+                startCamera: 'कैमरा शुरू करें',
+                capturePhoto: 'फोटो खींचें',
+                stopCamera: 'कैमरा बंद करें',
+                submitBtn: 'शिकायत जमा करें',
+                myComplaints: 'मेरी शिकायतें',
+                loading: 'शिकायतें लोड हो रही हैं...',
+                pincodePlaceholder: '6-अंकों का पिनकोड',
+                descPlaceholder: 'समस्या का वर्णन करें...',
+                locPlaceholder: 'क्षेत्र / सड़क का विवरण',
+                optTypeDefault: '-- समस्या का प्रकार चुनें --',
+                optTypeRoads: 'खराब सड़कें',
+                optTypeWater: 'पानी का रिसाव',
+                optTypeGarbage: 'कचरे का ढेर',
+                optTypeDrainage: 'नाली की सफाई',
+                optTypeStreetlight: 'स्ट्रीटलाइट की समस्या',
+                optTypeOther: 'अन्य',
+                optDistDefault: 'जिला चुनें...',
+                locationLabel: 'स्थान',
+                descLabel: 'विवरण',
+                notesLabel: 'नोट्स',
+                reportedLabel: 'रिपोर्ट किया गया',
+                noComplaints: 'कोई शिकायत नहीं मिली',
+                forwardedTo: 'को भेजा गया',
+                clickForDetails: 'पूरा विवरण देखने के लिए क्लिक करें \u2192',
+                headerTitle: 'डैशबोर्ड',
+                logout: 'लॉगआउट',
+                roleCitizen: 'नागरिक',
+                roleMunicipal: 'नगर पालिका अधिकारी',
+                roleDept: 'विभाग अधिकारी',
+                rolePolice: 'पुलिस अधिकारी',
+                tabSubmitted: 'जमा की गई',
+                tabForwarded: 'भेजी गई',
+                tabInProgress: 'प्रगति पर',
+                tabResolved: 'समाधान हो गया',
+                statusSubmitted: 'जमा की गई',
+                statusAssigned: 'भेजी गई',
+                statusInProgress: 'प्रगति पर',
+                statusResolved: 'समाधान हो गया',
+                municipalTitle: '\uD83D\uDCCB शिकायत प्रबंधन',
+                deptTitle: '\uD83D\uDEE0\uFE0F विभाग कार्यप्रवाह',
+                policeTitle: 'जांच के अधीन फर्जी शिकायतें',
+                labelSubmittedAt: 'जमा की गई',
+                modalActionTitle: '\u26A1 कार्रवाई करें',
+                optDeptDefault: '-- भेजने के लिए विभाग चुनें --',
+                btnForwardModal: '\u27A4 विभाग को भेजें',
+                labelUpdateState: '\u2699\uFE0F स्थिति अपडेट करें',
+                labelSelectStatus: 'स्थिति चुनें',
+                btnUpdate: 'अपडेट करें',
+                btnStartWorking: '\u25B6 काम शुरू करें',
+                btnMarkFake: '\uD83D\uDEA9 फर्जी चिह्नित करें',
+                labelUpdateNotes: 'प्रगति / समाधान नोट्स अपडेट करें',
+                placeholderWorkDone: 'किए गए कार्य का वर्णन करें...',
+                optStatusForwarded: '\uD83D\uDCE5 भेजी गई (नई)',
+                optStatusInProgress: '\u26A1 प्रगति पर',
+                optStatusResolved: '\u2705 समाधान हो गया',
+                modalTitle: 'शिकायत का विवरण',
+                reporterInfo: 'रिपोर्टर की जानकारी',
+                modalName: 'नाम',
+                modalPhone: 'फोन',
+                modalStatus: 'स्थिति',
+                complaintInfo: 'शिकायत का विवरण',
+                modalType: 'प्रकार',
+                modalDist: 'जिला',
+                modalPin: 'पिनकोड',
+                modalLoc: 'स्थान',
+                modalDesc: 'विवरण',
+                modalNotes: 'विभाग से समाधान नोट्स',
+                mapTitle: 'जीपीएस निर्देशांक और लाइव मैप',
+                photoTitle: 'नागरिक द्वारा ली गई लाइव फोटो (प्रमाण)'
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            // Use role-specific key to avoid leakage between roles
+            const key = role + 'Language';
+            localStorage.setItem(key, lang);
+            applyTranslations(lang);
+            // Sync selector if it exists
+            const selector = document.getElementById('language-selector');
+            if (selector) selector.value = lang;
+        }
+
+        function getSavedLanguage() {
+            const key = role + 'Language';
+            return localStorage.getItem(key) || 'en';
+        }
+
+        function applyTranslations(lang) {
+            const t = translations[lang] || translations['en'];
+
+            const map = {
+                'header-title': 'headerTitle',
+                'report-title': 'reportTitle',
+                'label-name': 'reporterName',
+                'label-phone': 'mobileNumber',
+                'label-type': 'problemType',
+                'label-district': 'district',
+                'label-pincode': 'pincode',
+                'label-desc': 'description',
+                'label-location': 'location',
+                'label-camera': 'liveEvidence',
+                'btn-start-camera': 'startCamera',
+                'btn-capture': 'capturePhoto',
+                'btn-stop-camera': 'stopCamera',
+                'btn-submit': 'submitBtn',
+                'my-complaints-title': 'myComplaints',
+                'opt-type-default': 'optTypeDefault',
+                'opt-type-roads': 'optTypeRoads',
+                'opt-type-water': 'optTypeWater',
+                'opt-type-garbage': 'optTypeGarbage',
+                'opt-type-drainage': 'optTypeDrainage',
+                'opt-type-streetlight': 'optTypeStreetlight',
+                'opt-type-other': 'optTypeOther',
+                'opt-dist-default': 'optDistDefault',
+                'modal-complaint-id': 'modalTitle',
+                'modal-reporter-info': 'reporterInfo',
+                'modal-label-name': 'modalName',
+                'modal-label-phone': 'modalPhone',
+                'modal-label-status': 'modalStatus',
+                'modal-complaint-info': 'complaintInfo',
+                'modal-label-type': 'modalType',
+                'modal-label-dist': 'modalDist',
+                'modal-label-pin': 'modalPin',
+                'modal-label-loc': 'modalLoc',
+                'modal-label-desc': 'modalDesc',
+                'modal-label-notes': 'modalNotes',
+                'modal-map-title': 'mapTitle',
+                'modal-photo-title': 'photoTitle',
+                'logout-btn': 'logout',
+                'lbl-tab-submitted': 'tabSubmitted',
+                'lbl-tab-assigned': 'tabForwarded',
+                'lbl-tab-inprogress': 'tabInProgress',
+                'lbl-tab-resolved': 'tabResolved',
+                'municipal-title': 'municipalTitle',
+                'dept-title': 'deptTitle',
+                'police-title': 'policeTitle',
+                'modal-action-title': 'modalActionTitle',
+                'btn-forward-modal': 'btnForwardModal',
+                'opt-dept-default': 'optDeptDefault'
+            };
+
+            Object.keys(map).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    // Preserve icons if they exist
+                    const icon = el.querySelector('i');
+                    if (icon) {
+                        // Use span for text to ensure proper alignment in flex containers
+                        el.innerHTML = `${icon.outerHTML} <span>${t[map[id]]}</span>`;
+                    } else {
+                        el.textContent = t[map[id]];
+                    }
+                }
+            });
+
+            // Update placeholders
+            const placeholders = {
+                'c-name': 'yourName',
+                'c-pincode': 'pincodePlaceholder',
+                'c-desc': 'descPlaceholder',
+                'c-loc': 'locPlaceholder'
+            };
+
+            Object.keys(placeholders).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.placeholder = t[placeholders[id]];
+            });
+
+            // Update loading text if visible
+            const list = document.getElementById('complaints-list');
+            if (list && list.children.length === 1 && list.children[0].tagName === 'P') {
+                list.children[0].textContent = t['loading'];
+            }
+
+            // Update role badge
+            const badge = document.getElementById('user-badge');
+            if (badge) {
+                const roleKey = 'role' + role.charAt(0).toUpperCase() + role.slice(1);
+                badge.textContent = t[roleKey] || role;
+            }
+
+            // Sync with current list
+            if (typeof allComplaints !== 'undefined' && allComplaints.length > 0) {
+                renderComplaints();
+            }
+        }
+
+        // Load complaints on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize language
+            const savedLang = getSavedLanguage();
+            setLanguage(savedLang);
+
+            loadComplaints().then(() => {
+                if (role === 'dept') {
+                    setActiveTab('assigned');
+                }
+            });
+
+            // Bind form submission for citizens
+            if (role === 'citizen') {
+                const form = document.getElementById('citizen-form');
+                if (form) form.addEventListener('submit', submitComplaint);
+            }
+        });
+
+        // ============ CAMERA FUNCTIONS ============
+        async function startCamera() {
+            try {
+                const video = document.getElementById('liveCamera');
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                    audio: false
+                });
+                video.srcObject = mediaStream;
+                video.play();
+                alert('📹 Camera started! Click "Capture Photo" to take a picture.');
+            } catch (error) {
+                alert('❌ Camera Error: ' + error.message + '\n\nMake sure you allow camera access.');
+                console.error('Camera error:', error);
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('liveCamera');
+            if (!mediaStream) {
+                alert('Please start the camera first!');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            photoData = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Show preview
+            const previewImg = document.getElementById('photo-preview');
+            previewImg.src = photoData;
+            document.getElementById('photo-preview-container').classList.remove('hidden');
+
+            alert('✅ Photo captured successfully!\n\n📍 Now capturing your location...');
+
+            // Automatically capture location when photo is captured
+            setTimeout(captureLocationAutomatic, 500);
+        }
+
+        function stopCamera(showAlert = true) {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+                if (showAlert) alert('📹 Camera stopped');
+            }
+        }
+
+        function clearPhoto() {
+            photoData = null;
+            document.getElementById('photo-preview-container').classList.add('hidden');
+            document.getElementById('c-photo').value = '';
+            document.getElementById('photo-location-display').innerHTML = 'Capturing location...';
+            alert('Photo & Location cleared');
+        }
+
+        // ============ LOCATION FUNCTIONS ============
+        function captureLocation() {
+            if (!navigator.geolocation) {
+                alert('❌ Geolocation is not supported by your browser');
+                return;
+            }
+
+            alert('🔍 Getting your location... Please allow location access.');
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    const coordsStr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    document.getElementById('c-coords').value = coordsStr;
+
+                    // Show location info
+                    const locInfo = document.getElementById('location-info');
+                    locInfo.innerHTML = `<strong>✅ Location Captured:</strong><br>Latitude: ${lat.toFixed(6)}<br>Longitude: ${lng.toFixed(6)}<br>Accuracy: ±${accuracy.toFixed(0)}m`;
+
+                    alert(`✅ Location captured!\n\nLatitude: ${lat.toFixed(6)}\nLongitude: ${lng.toFixed(6)}\nAccuracy: ±${accuracy.toFixed(0)} meters`);
+                },
+                function (error) {
+                    let errorMsg = 'Failed to get location';
+                    if (error.code === 1) errorMsg = 'Location access denied. Please enable location in browser settings.';
+                    if (error.code === 2) errorMsg = 'Location unavailable. Please check your GPS.';
+                    if (error.code === 3) errorMsg = 'Location request timed out.';
+
+                    alert('❌ ' + errorMsg);
+                    console.error('Geolocation error:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // Automatic location capture when photo is taken (called from capturePhoto)
+        function captureLocationAutomatic() {
+            if (!navigator.geolocation) {
+                console.warn('Geolocation not supported');
+                document.getElementById('photo-location-display').innerHTML = '⚠️ Geolocation not available';
+                return;
+            }
+
+            // Check if location already captured
+            if (document.getElementById('c-coords').value) {
+                const coords = document.getElementById('c-coords').value;
+                document.getElementById('photo-location-display').innerHTML = `<strong>${coords}</strong><br>✅ Already captured`;
+                return;
+            }
+
+            document.getElementById('photo-location-display').innerHTML = '🔍 Getting location...';
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    const coordsStr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    document.getElementById('c-coords').value = coordsStr;
+
+                    // Update photo location display
+                    document.getElementById('photo-location-display').innerHTML = `
+                        <strong>✅ Latitude:</strong> ${lat.toFixed(6)}<br>
+                        <strong>✅ Longitude:</strong> ${lng.toFixed(6)}<br>
+                        <strong>✅ Accuracy:</strong> ±${accuracy.toFixed(0)}m
+                    `;
+
+                    // Show location info below form
+                    const locInfo = document.getElementById('location-info');
+                    locInfo.innerHTML = `<strong>✅ Location Auto-Captured with Photo:</strong><br>📍 Latitude: ${lat.toFixed(6)}<br>📍 Longitude: ${lng.toFixed(6)}<br>📍 Accuracy: ±${accuracy.toFixed(0)}m`;
+
+                    alert(`✅ Photo + Location Captured!\n\n📷 Photo: Ready\n📍 Latitude: ${lat.toFixed(6)}\n📍 Longitude: ${lng.toFixed(6)}\n📍 Accuracy: ±${accuracy.toFixed(0)}m\n\nReady to submit! ✨`);
+                },
+                function (error) {
+                    console.warn('Auto location capture failed:', error);
+                    document.getElementById('photo-location-display').innerHTML = `
+                        <strong>⚠️ Location not captured</strong><br>
+                        Tap GPS button to capture location manually
+                    `;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // ============ COMPLAINT FUNCTIONS ============
+        let currentModalComplaintId = null;
+        let allComplaints = [];
+        let currentActiveTab = 'submitted';
+
+        function setActiveTab(tab) {
+            currentActiveTab = tab;
+
+            // Update UI styles for tabs
+            const tabs = ['submitted', 'assigned', 'in_progress', 'resolved'];
+            tabs.forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                if (el) {
+                    if (t === tab) {
+                        el.classList.add('active');
+                        // Reset to active color based on status
+                        el.classList.remove('bg-gray-100', 'text-gray-600');
+                        if (t === 'submitted') { el.classList.add('bg-yellow-100', 'text-yellow-800'); }
+                        else if (t === 'assigned') { el.classList.add('bg-blue-100', 'text-blue-800'); }
+                        else if (t === 'in_progress') { el.classList.add('bg-purple-100', 'text-purple-800'); }
+                        else if (t === 'resolved') { el.classList.add('bg-green-100', 'text-green-800'); }
+                    } else {
+                        el.classList.remove('active', 'bg-yellow-100', 'text-yellow-800', 'bg-blue-100', 'text-blue-800', 'bg-purple-100', 'text-purple-800', 'bg-green-100', 'text-green-800');
+                        el.classList.add('bg-gray-100', 'text-gray-600');
+                    }
+                }
+            });
+
+            renderComplaints();
+        }
+
+        async function loadComplaints() {
+            try {
+                const response = await fetch('/api/complaints');
+                const data = await response.json();
+                allComplaints = data.complaints;
+
+                if (role === 'municipal' || role === 'dept') {
+                    updateTabCounts();
+                }
+
+                renderComplaints();
+            } catch (error) {
+                console.error('Error loading complaints:', error);
+            }
+        }
+
+        function updateTabCounts() {
+            const counts = {
+                submitted: allComplaints.filter(c => c.status === 'submitted').length,
+                assigned: allComplaints.filter(c => c.status === 'assigned').length,
+                in_progress: allComplaints.filter(c => c.status === 'in_progress').length,
+                resolved: allComplaints.filter(c => c.status === 'resolved').length
+            };
+
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            };
+
+            setVal('count-submitted', counts.submitted);
+            setVal('count-assigned', counts.assigned);
+            setVal('count-in_progress', counts.in_progress);
+            setVal('count-resolved', counts.resolved);
+        }
+
+        function renderComplaints() {
+            const listEl = document.getElementById('complaints-list');
+            const t = translations[currentLanguage] || translations['en'];
+            let filtered = [];
+
+            if (role === 'municipal' || role === 'dept') {
+                filtered = allComplaints.filter(c => c.status === currentActiveTab);
+            } else {
+                filtered = allComplaints;
+            }
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<p class="text-gray-500 text-center py-8">${t.noComplaints || 'No complaints found'}</p>`;
+                return;
+            }
+
+            if (role === 'municipal') {
+                // Municipal view - cards with photo thumbnails
+                listEl.innerHTML = filtered.map(complaint => `
+                    <div class="border-2 rounded-xl p-4 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer" 
+                        onclick="openDetailModal(${complaint.id})" style="border-color: #e5e7eb; background-color: white;">
+                        <div class="flex gap-4">
+                            <!-- Photo Thumbnails -->
+                            <div class="flex gap-2 flex-shrink-0">
+                                ${complaint.photo_url ? `
+                                    <div class="flex flex-col items-center">
+                                         <div class="w-24 h-24 rounded-lg overflow-hidden bg-gray-200 border-2 border-yellow-400 shadow-sm">
+                                             <img src="${complaint.photo_url}" alt="Evidence" 
+                                                 class="w-full h-full object-cover"
+                                                 onerror="this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full text-gray-400 text-xs\\'>📷 Error</div>'">
+                                         </div>
+                                         <p class="text-[10px] text-gray-500 font-bold mt-1">📢 Issue</p>
+                                    </div>
+                                ` : `
+                                    <div class="w-24 h-24 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                        <span class="text-gray-400 text-xs text-center">No Photo</span>
+                                    </div>
+                                `}
+
+                                ${complaint.resolved_photo_url ? `
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-24 h-24 rounded-lg overflow-hidden bg-gray-200 border-2 border-green-500 shadow-sm">
+                                            <img src="${complaint.resolved_photo_url}" alt="Resolution" 
+                                                class="w-full h-full object-cover"
+                                                onerror="this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full text-gray-400 text-xs\\'>📷 Error</div>'">
+                                        </div>
+                                        <p class="text-[10px] text-green-600 font-bold mt-1">✅ Proof</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <!-- Complaint Info -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div>
+                                        <h3 class="font-bold text-gray-800 text-sm">${complaint.complaint_id}</h3>
+                                        <p class="text-sm font-medium text-blue-700">${t['optType' + (complaint.title || 'Other')] || complaint.title}</p>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs rounded-full ${getStatusColor(complaint.status)} flex-shrink-0">
+                                        ${t['status' + complaint.status.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')] || complaint.status.replace('_', ' ')}
+                                    </span>
+                                </div>
+                                <p class="text-xs font-bold text-blue-800 mb-1 flex items-center gap-2">
+                                    <i class="fas fa-user-circle"></i> ${complaint.reporter_name || 'Unknown'} 
+                                    <span class="text-gray-300">|</span> 
+                                    <i class="fas fa-phone-alt text-pink-500"></i> ${complaint.reporter_phone || 'N/A'}
+                                </p>
+                                <p class="text-xs text-gray-600 mb-1">📍 ${t.locationLabel}: ${complaint.location}</p>
+                                <p class="text-xs text-gray-500">🏘️ ${complaint.district} | 📮 ${complaint.pincode}</p>
+                                <p class="text-xs text-gray-500">🕐 ${t.reportedLabel}: ${complaint.created_at}</p>
+
+                                ${complaint.coordinates ? `
+                                    <!-- Live Map Preview for Municipal -->
+                                    <div class="mt-3 rounded-lg overflow-hidden border border-gray-200 shadow-sm" style="height: 120px;" onclick="event.stopPropagation()">
+                                        <iframe width="100%" height="100%" style="border:0;" loading="lazy" 
+                                            src="https://maps.google.com/maps?q=${complaint.coordinates.split(',')[0].trim()},${complaint.coordinates.split(',')[1].trim()}&z=14&output=embed">
+                                        </iframe>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-1" onclick="event.stopPropagation()">
+                                        <span class="text-[10px] text-gray-400 italic">${complaint.coordinates}</span>
+                                        <a href="https://www.google.com/maps?q=${complaint.coordinates}" target="_blank" 
+                                           class="text-[10px] text-blue-600 hover:text-blue-800 font-bold">
+                                            Open in Maps ↗
+                                        </a>
+                                    </div>
+                                ` : ''}
+
+                                ${complaint.description ? `
+                                    <p class="text-xs text-gray-600 mt-2 truncate" style="max-width: 400px;">📝 ${t.descLabel}: ${complaint.description}</p>
+                                ` : ''}
+                                ${complaint.forwarded_department ? `
+                                    <p class="mt-1 text-xs text-purple-700 font-semibold">📤 ${t.forwardedTo}: ${complaint.forwarded_department}</p>
+                                ` : ''}
+                                ${complaint.resolution_notes ? `
+                                    <p class="mt-1 text-xs text-green-700 font-bold bg-green-50 p-1 rounded border border-green-200">✅ ${t.notesLabel}: ${complaint.resolution_notes}</p>
+                                ` : ''}
+                                <p class="text-xs text-blue-500 mt-2 font-medium">${t.clickForDetails}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                // Other roles - standard view with Start Work button for Dept
+                listEl.innerHTML = filtered.map(complaint => `
+                    <div class="border rounded-lg p-4 hover:bg-gray-50 bg-white shadow-sm transition-all cursor-pointer" 
+                         onclick="openDetailModal(${complaint.id})"
+                         ${role === 'police' ? 'style="border-left: 4px solid #ef4444;"' : ''}>
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-gray-800">${complaint.complaint_id}</h3>
+                                <p class="text-sm text-gray-600 font-bold">${t['optType' + (complaint.title || 'Other')] || complaint.title}</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs rounded-full ${getStatusColor(complaint.status)}">
+                                ${t['status' + complaint.status.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')] || complaint.status.replace('_', ' ')}
+                            </span>
+                        </div>
+                        <div class="flex gap-4 mb-3 overflow-x-auto pb-2">
+                            ${complaint.photo_url ? `
+                                <div class="flex-shrink-0">
+                                    <p class="text-[10px] text-gray-500 mb-1 font-bold">📢 Original Issue</p>
+                                    <img src="${complaint.photo_url}" alt="Evidence Photo" class="w-32 h-24 object-cover rounded-lg border cursor-zoom-in shadow-sm hover:opacity-90" onclick="event.stopPropagation(); openFullPhoto(this.src)">
+                                </div>
+                            ` : ''}
+                            
+                            ${complaint.resolved_photo_url ? `
+                                <div class="flex-shrink-0">
+                                    <p class="text-[10px] text-green-600 mb-1 font-bold">✅ Resolution Proof</p>
+                                    <img src="${complaint.resolved_photo_url}" alt="Resolution Photo" class="w-32 h-24 object-cover rounded-lg border-2 border-green-400 cursor-zoom-in shadow-sm hover:opacity-90" onclick="event.stopPropagation(); openFullPhoto(this.src)">
+                                </div>
+                            ` : ''}
+
+                             <div class="text-sm text-gray-600 flex-1 min-w-[150px]">
+                                <h4 class="text-xs font-bold text-blue-800 mb-1 flex items-center gap-2">
+                                    <i class="fas fa-user-circle"></i> ${complaint.reporter_name} 
+                                    <span class="text-gray-300">|</span> 
+                                    <i class="fas fa-phone-alt text-pink-500"></i> ${complaint.reporter_phone}
+                                </h4>
+                                <p class="mb-1"><strong>📍 ${t.locationLabel}:</strong> ${complaint.location}</p>
+                                <p class="mb-1"><strong>📝 ${t.descLabel}:</strong> ${complaint.description}</p>
+                                ${role === 'police' ? `
+                                    <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                                        <p class="text-xs font-bold text-red-700 uppercase mb-1">🔍 Investigation Targets</p>
+                                        <p class="text-sm font-bold text-gray-800">👤 Name: ${complaint.reporter_name}</p>
+                                        <p class="text-sm font-bold text-red-600">📞 Phone: ${complaint.reporter_phone}</p>
+                                    </div>
+                                ` : ''}
+                                ${complaint.resolution_notes ? `
+                                    <p class="mb-1 text-green-700 font-bold">✅ ${t.notesLabel}: ${complaint.resolution_notes}</p>
+                                ` : ''}
+                                <p class="text-xs text-gray-500">${t.reportedLabel}: ${complaint.created_at}</p>
+                            </div>
+                        </div>
+
+                        ${role === 'dept' && complaint.coordinates ? `
+                            <!-- Live Map Preview for Department -->
+                            <div class="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200" onclick="event.stopPropagation()">
+                                <p class="text-xs font-bold text-blue-700 mb-2 uppercase tracking-wide"><i class="fas fa-map-marked-alt mr-1"></i> Target Work Location</p>
+                                <div class="rounded-lg overflow-hidden border border-blue-100 shadow-sm mb-2" style="height: 150px;">
+                                    <iframe width="100%" height="100%" style="border:0;" loading="lazy" 
+                                        src="https://maps.google.com/maps?q=${complaint.coordinates.split(',')[0].trim()},${complaint.coordinates.split(',')[1].trim()}&z=15&output=embed">
+                                    </iframe>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] text-gray-400 font-mono">${complaint.coordinates}</span>
+                                    <a href="https://www.google.com/maps?q=${complaint.coordinates}" target="_blank" 
+                                       class="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1">
+                                        Open in Navigation ↗
+                                    </a>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${role === 'police' && complaint.coordinates ? `
+                            <!-- Live Google Map for Police -->
+                            <div class="mt-3 border-t pt-3" onclick="event.stopPropagation()">
+                                <p class="text-xs font-bold text-red-600 mb-2 underline tracking-wider">🚩 LIVE INVESTIGATION LOCATION</p>
+                                <div class="rounded-lg overflow-hidden border border-red-200 shadow-sm mb-2" style="height: 180px;">
+                                    <iframe width="100%" height="100%" style="border:0;" loading="lazy" 
+                                        src="https://maps.google.com/maps?q=${complaint.coordinates.split(',')[0].trim()},${complaint.coordinates.split(',')[1].trim()}&z=15&output=embed">
+                                    </iframe>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] text-gray-500 font-mono italic">${complaint.coordinates}</span>
+                                    <a href="https://www.google.com/maps?q=${complaint.coordinates}" target="_blank" 
+                                       class="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1">
+                                        <i class="fas fa-directions"></i> Start Navigation ↗
+                                    </a>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        ${role === 'dept' ? `
+                            <div class="mt-4 pt-4 border-t border-gray-100" onclick="event.stopPropagation()">
+                                <p class="text-xs font-bold text-gray-500 uppercase mb-2">${t.labelUpdateState}</p>
+                                <div class="flex gap-2 flex-wrap items-end">
+                                    <div class="flex-1 min-w-[150px]">
+                                        <label class="block text-[10px] text-gray-400 mb-1">${t.labelSelectStatus}</label>
+                                        <select id="status-select-${complaint.id}" onchange="toggleNotes(${complaint.id})" class="w-full border rounded px-2 py-1.5 text-xs bg-gray-50 font-semibold">
+                                            <option value="assigned" ${complaint.status === 'assigned' ? 'selected' : ''}>${t.optStatusForwarded}</option>
+                                            <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>${t.optStatusInProgress}</option>
+                                            <option value="resolved" ${complaint.status === 'resolved' ? 'selected' : ''}>${t.optStatusResolved}</option>
+                                        </select>
+                                    </div>
+                                    <button onclick="updateGenericStatus(${complaint.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded font-bold transition-colors">
+                                        ${t.btnUpdate}
+                                    </button>
+                                    
+                                    ${complaint.status === 'assigned' ? `
+                                        <button onclick="quickUpdateStatus(${complaint.id}, 'in_progress')" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded font-bold transition-colors">
+                                            <i class="fas fa-play mr-1"></i> ${t.btnStartWorking}
+                                        </button>
+                                    ` : ''}
+
+                                    <button onclick="markAsFake(${complaint.id})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[10px] px-3 py-1.5 rounded font-bold uppercase transition-all">
+                                        ${t.btnMarkFake}
+                                    </button>
+                                </div>
+                                
+                                <div id="notes-container-${complaint.id}" class="mt-2 ${complaint.status === 'resolved' || complaint.status === 'in_progress' ? '' : 'hidden'}">
+                                    <label class="block text-[10px] text-gray-400 mb-1">${t.labelUpdateNotes}</label>
+                                    <textarea id="notes-${complaint.id}" class="w-full border rounded p-2 text-xs" placeholder="${t.placeholderWorkDone}">${complaint.resolution_notes || ''}</textarea>
+                                </div>
+
+                                <!-- Resolved Photo Capture (Required for Department) -->
+                                <div id="resolved-photo-section-${complaint.id}" class="mt-2 ${complaint.status === 'resolved' ? '' : 'hidden'}">
+                                    <label class="block text-[10px] text-red-600 font-bold mb-1 uppercase tracking-tight">📸 Live Resolution Photo (Compulsory)</label>
+                                    
+                                    <div id="res-camera-container-${complaint.id}" class="hidden bg-black rounded-lg overflow-hidden mb-2 relative" style="height: 200px;">
+                                        <video id="res-video-${complaint.id}" class="w-full h-full object-cover" autoplay playsinline></video>
+                                    </div>
+                                    
+                                    <div id="res-preview-container-${complaint.id}" class="${complaint.resolved_photo_url ? '' : 'hidden'} mb-2">
+                                        <img id="res-preview-${complaint.id}" src="${complaint.resolved_photo_url || ''}" class="w-full rounded-lg border-2 border-green-500 shadow-md">
+                                        <p class="text-[10px] text-green-600 font-bold mt-1">✅ Captured Resolution Evidence</p>
+                                    </div>
+
+                                    <div class="flex gap-1 flex-wrap">
+                                        <button id="btn-res-start-${complaint.id}" onclick="startResCamera(${complaint.id})" class="bg-gray-800 text-white text-[10px] px-2 py-1 rounded flex items-center gap-1 hover:bg-black transition-all">
+                                            <i class="fas fa-video"></i> Start Camera
+                                        </button>
+                                        <button id="btn-res-capture-${complaint.id}" onclick="captureResPhoto(${complaint.id})" class="hidden bg-yellow-500 text-white text-[10px] px-2 py-1 rounded flex items-center gap-1 hover:bg-yellow-600 transition-all">
+                                            <i class="fas fa-camera"></i> Take Photo
+                                        </button>
+                                        <button id="btn-res-stop-${complaint.id}" onclick="stopResCamera(${complaint.id})" class="hidden bg-red-600 text-white text-[10px] px-2 py-1 rounded flex items-center gap-1 hover:bg-red-700 transition-all">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="res-photo-data-${complaint.id}" value="">
+                                    <input type="hidden" id="res-coords-data-${complaint.id}" value="">
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            }
+        }
+
+        function toggleNotes(complaintId) {
+            const select = document.getElementById(`status-select-${complaintId}`);
+            const notesContainer = document.getElementById(`notes-container-${complaintId}`);
+            const photoSection = document.getElementById(`resolved-photo-section-${complaintId}`);
+
+            if (select.value === 'resolved' || select.value === 'in_progress') {
+                notesContainer.classList.remove('hidden');
+            } else {
+                notesContainer.classList.add('hidden');
+            }
+
+            if (select.value === 'resolved') {
+                photoSection.classList.remove('hidden');
+            } else {
+                photoSection.classList.add('hidden');
+                stopResCamera(complaintId);
+            }
+        }
+
+        async function quickUpdateStatus(complaintId, newStatus) {
+            try {
+                const response = await fetch(`/api/complaint/${complaintId}/update-status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus, notes: 'Work started.' })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ Status updated to ${newStatus.replace('_', ' ')}!`);
+                    // Automatically switch to the correct tab to show the update
+                    setActiveTab(newStatus);
+                    loadComplaints();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ An error occurred.');
+                console.error(error);
+            }
+        }
+
+        async function updateGenericStatus(complaintId) {
+            const status = document.getElementById(`status-select-${complaintId}`).value;
+            const notes = document.getElementById(`notes-${complaintId}`).value;
+            const resolvedPhoto = document.getElementById(`res-photo-data-${complaintId}`).value;
+            const resolvedCoords = document.getElementById(`res-coords-data-${complaintId}`).value;
+
+            if (status === 'resolved') {
+                if (!resolvedPhoto) {
+                    alert('⚠️ COMPULSORY: You must capture a live photo of the resolved issue before marks as Resolved.');
+                    return;
+                }
+                if (!notes || notes.trim().length < 5) {
+                    alert('⚠️ Please provide detailed resolution notes.');
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch(`/api/complaint/${complaintId}/update-status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        status,
+                        notes,
+                        resolved_photo: resolvedPhoto,
+                        resolved_coordinates: resolvedCoords
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Status updated successfully!');
+                    // Stop camera if it's still running
+                    stopResCamera(complaintId);
+                    // Switch tab if status changed to something not in current tab
+                    if (status !== currentActiveTab) {
+                        setActiveTab(status);
+                    }
+                    loadComplaints();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ An error occurred.');
+                console.error(error);
+            }
+        }
+
+        // ============ DEPT RESOLUTION CAMERA FUNCTIONS ============
+        let resStreams = {};
+
+        async function startResCamera(complaintId) {
+            try {
+                const video = document.getElementById(`res-video-${complaintId}`);
+                const container = document.getElementById(`res-camera-container-${complaintId}`);
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                    audio: false
+                });
+
+                resStreams[complaintId] = stream;
+                video.srcObject = stream;
+                video.play();
+
+                container.classList.remove('hidden');
+                document.getElementById(`btn-res-start-${complaintId}`).classList.add('hidden');
+                document.getElementById(`btn-res-capture-${complaintId}`).classList.remove('hidden');
+                document.getElementById(`btn-res-stop-${complaintId}`).classList.remove('hidden');
+
+                document.getElementById(`res-preview-container-${complaintId}`).classList.add('hidden');
+            } catch (error) {
+                alert('❌ Camera Error: ' + error.message);
+                console.error('Camera error:', error);
+            }
+        }
+
+        async function captureResPhoto(complaintId) {
+            const video = document.getElementById(`res-video-${complaintId}`);
+            const stream = resStreams[complaintId];
+
+            if (!stream) return;
+
+            // Get live location
+            let coords = "Location not available";
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+                });
+                coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+                document.getElementById(`res-coords-data-${complaintId}`).value = coords;
+            } catch (err) {
+                console.warn("Location error:", err);
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            // Overlay Location & Timestamp
+            const now = new Date();
+            const dateStr = now.toLocaleString();
+
+            ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+            ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+
+            ctx.fillStyle = "white";
+            ctx.font = "bold 14px Arial";
+            ctx.fillText("✅ RESOLVED PROOF", 10, canvas.height - 40);
+            ctx.font = "12px Arial";
+            ctx.fillText(`📍 ${coords} | 🕒 ${dateStr}`, 10, canvas.height - 20);
+
+            const data = canvas.toDataURL('image/jpeg', 0.8);
+            document.getElementById(`res-photo-data-${complaintId}`).value = data;
+
+            const preview = document.getElementById(`res-preview-${complaintId}`);
+            preview.src = data;
+            document.getElementById(`res-preview-container-${complaintId}`).classList.remove('hidden');
+
+            // Update UI to show location captured
+            const locLabel = document.createElement('p');
+            locLabel.className = 'text-[10px] text-blue-600 font-bold mt-1';
+            locLabel.innerHTML = `<i class="fas fa-map-marker-alt"></i> Location Captured: ${coords}`;
+            preview.after(locLabel);
+
+            stopResCamera(complaintId);
+            alert('✅ Resolution photo & live location captured!');
+        }
+
+        function stopResCamera(complaintId) {
+            if (resStreams[complaintId]) {
+                resStreams[complaintId].getTracks().forEach(track => track.stop());
+                delete resStreams[complaintId];
+            }
+
+            const container = document.getElementById(`res-camera-container-${complaintId}`);
+            if (container) container.classList.add('hidden');
+
+            const btnStart = document.getElementById(`btn-res-start-${complaintId}`);
+            const btnCapture = document.getElementById(`btn-res-capture-${complaintId}`);
+            const btnStop = document.getElementById(`btn-res-stop-${complaintId}`);
+
+            if (btnStart) btnStart.classList.remove('hidden');
+            if (btnCapture) btnCapture.classList.add('hidden');
+            if (btnStop) btnStop.classList.add('hidden');
+        }
+
+        async function startWork(complaintId) {
+            if (!confirm('Start work on this complaint?')) return;
+            try {
+                const response = await fetch(`/api/complaint/${complaintId}/start-work`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Work started! Status updated to In Progress.');
+                    loadComplaints();
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function resolveComplaint(complaintId) {
+            const notes = document.getElementById('notes-' + complaintId).value;
+            if (!notes) { alert('Please enter resolution notes'); return; }
+            if (!confirm('Mark this complaint as resolved?')) return;
+
+            try {
+                const response = await fetch(`/api/complaint/${complaintId}/resolve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Complaint resolved successfully!');
+                    loadComplaints();
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        // ============ DETAIL MODAL FUNCTIONS (Municipal) ============
+        async function openDetailModal(complaintId) {
+            try {
+                const t = translations[currentLanguage] || translations['en'];
+                currentModalComplaintId = complaintId;
+                const response = await fetch(`/api/complaint/${complaintId}/detail`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('❌ Could not load complaint details');
+                    return;
+                }
+
+                const c = data.complaint;
+
+                // Populate modal
+                document.getElementById('modal-complaint-id').textContent = `📋 ${c.complaint_id}`;
+                document.getElementById('modal-date').textContent = `${t.labelSubmittedAt || 'Submitted'}: ${c.created_at}`;
+                document.getElementById('modal-reporter-name').textContent = c.reporter_name;
+                document.getElementById('modal-reporter-phone').textContent = c.reporter_phone;
+
+                const statusEl = document.getElementById('modal-status');
+                const statusKey = 'status' + c.status.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('');
+                statusEl.textContent = t[statusKey] || c.status.toUpperCase();
+                statusEl.className = `px-2 py-0.5 rounded-full text-xs font-bold ${getStatusColor(c.status)}`;
+
+                document.getElementById('modal-type').textContent = t['optType' + (c.type || 'Other')] || c.type;
+                document.getElementById('modal-district').textContent = c.district;
+                document.getElementById('modal-pincode').textContent = c.pincode;
+                document.getElementById('modal-location').textContent = c.location;
+                document.getElementById('modal-description').textContent = c.description || 'No description provided';
+
+                // Resolution Notes
+                const resSection = document.getElementById('modal-resolution-section');
+                if (c.resolution_notes) {
+                    document.getElementById('modal-resolution-notes').textContent = c.resolution_notes;
+                    resSection.classList.remove('hidden');
+                } else {
+                    resSection.classList.add('hidden');
+                }
+
+                // Coordinates & Google Map
+                if (c.coordinates) {
+                    document.getElementById('modal-coordinates').textContent = c.coordinates;
+                    document.getElementById('modal-coords-section').classList.remove('hidden');
+
+                    // Parse coordinates (format: "lat, lng")
+                    const coords = c.coordinates.split(',').map(s => s.trim());
+                    if (coords.length === 2) {
+                        const lat = coords[0];
+                        const lng = coords[1];
+
+                        // Set Google Maps iframe
+                        const mapIframe = document.getElementById('modal-google-map');
+                        mapIframe.src = `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`;
+
+                        // Set "Open in Google Maps" link
+                        const mapLink = document.getElementById('modal-map-link');
+                        mapLink.href = `https://www.google.com/maps?q=${lat},${lng}`;
+                    }
+                } else {
+                    document.getElementById('modal-coords-section').classList.add('hidden');
+                    document.getElementById('modal-google-map').src = '';
+                }
+
+                // Photo
+                if (c.photo_url) {
+                    document.getElementById('modal-photo').src = c.photo_url;
+                    document.getElementById('modal-photo-section').classList.remove('hidden');
+                } else {
+                    document.getElementById('modal-photo-section').classList.add('hidden');
+                }
+
+                // Resolved Photo
+                const resPhotoSection = document.getElementById('modal-resolved-photo-section');
+                if (c.resolved_photo_url) {
+                    document.getElementById('modal-resolved-photo').src = c.resolved_photo_url;
+                    resPhotoSection.classList.remove('hidden');
+
+                    // Show resolution coordinates if available
+                    if (c.resolved_coordinates) {
+                        document.getElementById('modal-resolved-coordinates').textContent = c.resolved_coordinates;
+                        document.getElementById('modal-res-coords-section').classList.remove('hidden');
+                    } else {
+                        document.getElementById('modal-res-coords-section').classList.add('hidden');
+                    }
+                } else {
+                    resPhotoSection.classList.add('hidden');
+                }
+
+                // Show/hide action section based on status
+                if (c.status === 'submitted') {
+                    document.getElementById('modal-action-section').classList.remove('hidden');
+                } else {
+                    document.getElementById('modal-action-section').classList.add('hidden');
+                }
+
+                // Show modal
+                document.getElementById('complaint-detail-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } catch (error) {
+                console.error('Error loading complaint details:', error);
+                alert('❌ Failed to load complaint details');
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('complaint-detail-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+            currentModalComplaintId = null;
+        }
+
+        function openFullPhoto(src) {
+            document.getElementById('fullscreen-photo-img').src = src;
+            document.getElementById('fullscreen-photo-modal').classList.remove('hidden');
+        }
+
+        function closeFullPhoto() {
+            document.getElementById('fullscreen-photo-modal').classList.add('hidden');
+        }
+
+        async function forwardFromModal() {
+            if (!currentModalComplaintId) return;
+
+            const department = document.getElementById('modal-dept-select').value;
+            if (!department) {
+                alert('❌ Please select a department before forwarding.');
+                return;
+            }
+
+            if (!confirm(`Forward this complaint to "${department}"?`)) return;
+
+            try {
+                const response = await fetch(`/api/complaint/${currentModalComplaintId}/forward`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ department: department })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeDetailModal();
+                    loadComplaints();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ An error occurred. Please try again.');
+                console.error(error);
+            }
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'submitted': 'bg-yellow-100 text-yellow-800',
+                'verified': 'bg-blue-100 text-blue-800',
+                'assigned': 'bg-blue-100 text-blue-800',
+                'in_progress': 'bg-purple-100 text-purple-800',
+                'resolved': 'bg-green-100 text-green-800'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        async function submitComplaint(e) {
+            e.preventDefault();
+
+            // Stop camera before submitting (silent)
+            if (mediaStream) {
+                stopCamera(false);
+            }
+
+            // Validate form fields
+            const name = document.getElementById('c-name').value.trim();
+            const type = document.getElementById('c-type').value.trim();
+            const district = document.getElementById('c-district').value.trim();
+            const pincode = document.getElementById('c-pincode').value.trim();
+            const location = document.getElementById('c-loc').value.trim();
+            const description = document.getElementById('c-desc').value.trim();
+
+            if (!name) {
+                alert('❌ Please enter your name');
+                return;
+            }
+            if (!type || type === '') {
+                alert('❌ Please select a problem type');
+                return;
+            }
+            if (!district || district === '') {
+                alert('❌ Please select a district');
+                return;
+            }
+            if (!pincode || String(pincode).length !== 6) {
+                alert('❌ Please enter a valid 6-digit pincode');
+                return;
+            }
+            if (!location) {
+                alert('❌ Please enter the location details');
+                return;
+            }
+            if (!description) {
+                alert('❌ Please describe the issue');
+                return;
+            }
+
+            const complaintData = {
+                name: name,
+                type: type,
+                district: district,
+                pincode: pincode,
+                location: location,
+                description: description,
+                mobile_number: document.getElementById('c-phone').value,
+                coordinates: document.getElementById('c-coords').value,
+                photo: photoData
+            };
+
+            try {
+                const response = await fetch('/api/complaint/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(complaintData)
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Server error response:', text);
+                    alert(`❌ Server error: ${response.status} ${response.statusText}\n\nYour session might have expired. Please try logging out and in again.`);
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Complaint submitted successfully!\n\nComplaint ID: ' + data.complaint_id);
+                    document.getElementById('citizen-form').reset();
+                    photoData = null;
+                    document.getElementById('photo-preview-container').classList.add('hidden');
+                    document.getElementById('location-info').innerHTML = '';
+                    loadComplaints();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ An error occurred while communicating with the server.\n\nDetails: ' + error.message);
+                console.error('Submission error:', error);
+            }
+        }
+
+        async function forwardComplaint(complaintId) {
+            const select = document.getElementById('dept-' + complaintId);
+            const department = select ? select.value : '';
+
+            if (!department) {
+                alert('❌ Please select a department before forwarding.');
+                return;
+            }
+
+            if (!confirm(`Forward this complaint to "${department}"?`)) return;
+
+            try {
+                const response = await fetch(`/api/complaint/${complaintId}/forward`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ department: department })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    loadComplaints();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ An error occurred. Please try again.');
+                console.error(error);
+            }
+        }
+
+        async function markAsFake(complaintId) {
+            const reason = prompt("Why are you marking this as fake? (Optional):", "No evidence found at location / Spam report");
+            if (reason === null) return; // User cancelled
+
+            if (!confirm('Are you sure you want to mark this complaint as fake? It will be sent for investigation.')) return;
+
+            try {
+                const response = await fetch(`/api/complaint/${complaintId}/mark-fake`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: reason })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('🚩 ' + data.message);
+                    loadComplaints();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ An error occurred.');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+
+</html>
